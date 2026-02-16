@@ -10,13 +10,13 @@ from pathlib import Path
 @dataclass
 class SourceAsset:
     """Normalized asset representation from any source.
-    
+
     Attributes:
-        asset_id: Stable unique identifier for this asset (used for metadata key)
+        asset_id: Stable unique identifier for this asset (metadata key)
         display_name: Human-readable name shown in UI
-        local_path: Path to image file on local filesystem (required for render/print)
+        local_path: Path to image file on local filesystem (for render)
         datetime_hint: Optional datetime associated with the asset
-        location: Optional location string (e.g., "37.7749,-122.4194" or "San Francisco, CA")
+        location: Optional location (e.g., "37.7749,-122.4194")
     """
 
     asset_id: str
@@ -29,7 +29,7 @@ class SourceAsset:
 @dataclass
 class SourceLoadResult:
     """Result of loading assets from a source.
-    
+
     Attributes:
         assets: List of loaded assets
         source_id: Identifier for the source type (e.g., "folder", "google_photos")

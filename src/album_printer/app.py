@@ -205,6 +205,9 @@ DATETIME_DIGITIZED_TAG = next(
     tag for tag, name in ExifTags.TAGS.items() if name == "DateTimeDigitized"
 )
 DATETIME_TAG = next(tag for tag, name in ExifTags.TAGS.items() if name == "DateTime")
+GPS_INFO_TAG = next(
+    (tag for tag, name in ExifTags.TAGS.items() if name == "GPSInfo"), None
+)
 
 
 @dataclass
@@ -515,6 +518,101 @@ def exif_datetime_for_image(path: Path) -> datetime | None:
     except OSError:
         return None
     return None
+
+
+def _convert_gps_coordinate(coord: tuple, ref: str) -> float | None:
+    """Convert GPS coordinate from degrees/minutes/seconds to decimal.
+
+    Args:
+        coord: Tuple of (degrees, minutes, seconds) as rational numbers
+        ref: Reference direction (N, S, E, W)
+
+    Returns:
+        Decimal coordinate or None if invalid
+    """
+    try:
+        if not coord or len(coord) < 2:
+            return None
+
+        # Handle rational numbers (tuples of numerator/denominator)
+        def to_float(val):
+            if isinstance(val, tuple) and len(val) == 2:
+                return float(val[0]) / float(val[1]) if val[1] != 0 else 0
+            return float(val)
+
+        degrees = to_float(coord[0])
+        minutes = to_float(coord[1])
+        seconds = to_float(coord[2]) if len(coord) > 2 else 0
+
+        decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+        # Apply negative for South and West
+        if ref in ("S", "W"):
+            decimal = -decimal
+
+        return decimal
+    except (ValueError, TypeError, ZeroDivisionError):
+        return None
+
+
+def exif_gps_for_image(path: Path) -> tuple[float, float] | None:
+    """Extract GPS coordinates from image EXIF data.
+
+    Args:
+        path: Path to image file
+
+    Returns:
+        Tuple of (latitude, longitude) in decimal degrees, or None if not available
+    """
+    if GPS_INFO_TAG is None:
+        return None
+
+    try:
+        with Image.open(path) as image:
+            exif = image.getexif()
+            if not exif:
+                return None
+
+            gps_info = exif.get(GPS_INFO_TAG)
+            if not gps_info:
+                return None
+
+            # GPS tags: 1=LatRef, 2=Lat, 3=LonRef, 4=Lon
+            lat_ref = gps_info.get(1)
+            lat = gps_info.get(2)
+            lon_ref = gps_info.get(3)
+            lon = gps_info.get(4)
+
+            if not all([lat_ref, lat, lon_ref, lon]):
+                return None
+
+            latitude = _convert_gps_coordinate(lat, lat_ref)
+            longitude = _convert_gps_coordinate(lon, lon_ref)
+
+            if latitude is None or longitude is None:
+                return None
+
+            # Validate reasonable ranges
+            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+                return None
+
+            return (latitude, longitude)
+    except (OSError, KeyError, AttributeError):
+        return None
+    return None
+
+
+def format_gps_location(lat: float, lon: float) -> str:
+    """Format GPS coordinates for display.
+
+    Args:
+        lat: Latitude in decimal degrees
+        lon: Longitude in decimal degrees
+
+    Returns:
+        Formatted location string
+    """
+    return f"{lat:.6f}, {lon:.6f}"
 
 
 def center_crop_to_ratio(
