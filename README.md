@@ -1,4 +1,4 @@
-# Album Printer
+# Album Print Flow
 
 Desktop tool to load a folder of photos, crop to print ratio, apply lightweight edits, stamp date/date+time, and print to a photo printer (Epson ET-8550 workflow supported).
 
