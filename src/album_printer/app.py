@@ -229,6 +229,11 @@ class ProcessingSettings:
     stamp_border_color: str = DEFAULT_STAMP_BORDER_COLOR
     stamp_vertical: bool = False
     datetime_override: datetime | None = None
+    # Location stamp settings
+    location_stamp_enabled: bool = False
+    location_stamp_corner: str = "Bottom Left"
+    location_stamp_offset_x_px: int = 15
+    location_stamp_offset_y_px: int = 15
 
 
 class PreviewLabel(QLabel):
@@ -788,7 +793,94 @@ def apply_stamp(
     return image.convert("RGB")
 
 
-def render_image(path: Path, settings: ProcessingSettings) -> Image.Image:
+def apply_location_stamp(
+    image: Image.Image, location_text: str, settings: ProcessingSettings
+) -> Image.Image:
+    """Apply location stamp to image (separate from datetime stamp).
+
+    Args:
+        image: Image to stamp
+        location_text: Location text to display
+        settings: Processing settings with location stamp configuration
+
+    Returns:
+        Image with location stamp applied
+    """
+    if not location_text or not settings.location_stamp_enabled:
+        return image
+
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+
+    draw = ImageDraw.Draw(image)
+
+    if settings.orientation == "Portrait":
+        base_size = max(26, int(image.width * 0.065))
+    else:
+        base_size = max(22, int(image.width * 0.048))
+
+    margin_x = int(
+        round(image.width * max(0, settings.location_stamp_offset_x_px) / 1000.0)
+    )
+    margin_y = int(
+        round(image.height * max(0, settings.location_stamp_offset_y_px) / 1000.0)
+    )
+
+    font_size = int(base_size * (settings.stamp_scale_percent / 100.0))
+    font_size = max(14, font_size)
+    font = load_stamp_font(settings.stamp_font, font_size)
+
+    stroke_width = max(2, int(font_size * 0.12))
+    color = QColor(settings.stamp_color)
+    if not color.isValid():
+        color = QColor(DEFAULT_STAMP_COLOR)
+    border_color = QColor(settings.stamp_border_color)
+    if not border_color.isValid():
+        border_color = QColor(DEFAULT_STAMP_BORDER_COLOR)
+
+    left, top, right, bottom = draw.textbbox((0, 0), location_text, font=font)
+    text_width = right - left
+    text_height = bottom - top
+
+    text_layer = Image.new(
+        "RGBA",
+        (text_width + stroke_width * 2, text_height + stroke_width * 2),
+        (0, 0, 0, 0),
+    )
+    text_draw = ImageDraw.Draw(text_layer)
+    text_draw.text(
+        (stroke_width - left, stroke_width - top),
+        location_text,
+        fill=(color.red(), color.green(), color.blue()),
+        font=font,
+        stroke_width=stroke_width,
+        stroke_fill=(border_color.red(), border_color.green(), border_color.blue()),
+    )
+
+    stamp_w, stamp_h = text_layer.size
+
+    # Use location_stamp_corner instead of corner
+    corner = settings.location_stamp_corner
+    if "Top" in corner:
+        y = margin_y
+    else:
+        y = image.height - stamp_h - margin_y
+
+    if "Left" in corner:
+        x = margin_x
+    else:
+        x = image.width - stamp_w - margin_x
+
+    x = max(0, min(image.width - stamp_w, x))
+    y = max(0, min(image.height - stamp_h, y))
+
+    image.alpha_composite(text_layer, (x, y))
+    return image.convert("RGB")
+
+
+def render_image(
+    path: Path, settings: ProcessingSettings, location: str | None = None
+) -> Image.Image:
     with Image.open(path) as source:
         image = source.convert("RGB")
 
@@ -802,11 +894,17 @@ def render_image(path: Path, settings: ProcessingSettings) -> Image.Image:
     )
     image = ImageEnhance.Brightness(image).enhance(settings.brightness_percent / 100.0)
     image = apply_stamp(image, stamp_text(path, settings), settings)
+    # Apply location stamp as a second pass if enabled and location exists
+    if location:
+        image = apply_location_stamp(image, location, settings)
     return image
 
 
 def render_preview_image(
-    path: Path, settings: ProcessingSettings, max_dimension: int
+    path: Path,
+    settings: ProcessingSettings,
+    max_dimension: int,
+    location: str | None = None,
 ) -> Image.Image:
     with Image.open(path) as source:
         image = source.convert("RGB")
@@ -831,6 +929,9 @@ def render_preview_image(
     )
     image = ImageEnhance.Brightness(image).enhance(settings.brightness_percent / 100.0)
     image = apply_stamp(image, stamp_text(path, settings), settings)
+    # Apply location stamp as a second pass if enabled and location exists
+    if location:
+        image = apply_location_stamp(image, location, settings)
     return image
 
 
@@ -1587,6 +1688,7 @@ class MainWindow(QMainWindow):
         self.thumbnail_placeholder = QPixmap(THUMBNAIL_SIZE, THUMBNAIL_SIZE)
         self.thumbnail_placeholder.fill(Qt.GlobalColor.darkGray)
         self.orientation_cache: dict[Path, str] = {}
+        self.location_cache: dict[Path, tuple[float, float] | None] = {}
         self.file_hash_cache: dict[Path, tuple[int, int, str]] = {}
         self.log_entries: list[tuple[str, str]] = []
         self.log_level_filter_value = "INFO"
@@ -2881,6 +2983,26 @@ class MainWindow(QMainWindow):
 
         self.orientation_cache[path] = orientation
         return orientation
+
+    def location_for_path(self, path: Path) -> str | None:
+        """Get location string for an image.
+
+        Priority: stored metadata > EXIF GPS > None
+        """
+        # Check if location is cached
+        if path in self.location_cache:
+            coords = self.location_cache[path]
+            if coords is not None:
+                return format_gps_location(coords[0], coords[1])
+            return None
+
+        # Try to get from EXIF
+        coords = exif_gps_for_image(path)
+        self.location_cache[path] = coords
+
+        if coords is not None:
+            return format_gps_location(coords[0], coords[1])
+        return None
 
     def photo_entry_for_path(self, path: Path) -> dict[str, object]:
         photos = self.folder_metadata.get("photos")
