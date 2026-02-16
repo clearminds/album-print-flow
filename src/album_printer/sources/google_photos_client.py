@@ -31,7 +31,9 @@ class GooglePhotosClient:
             credentials = self.auth.get_credentials()
             if not credentials:
                 raise RuntimeError("Not authenticated. Please authenticate first.")
-            self._service = build("photoslibrary", "v1", credentials=credentials, static_discovery=False)
+            self._service = build(
+                "photoslibrary", "v1", credentials=credentials, static_discovery=False
+            )
         return self._service
 
     def list_albums(self, page_size: int = 50) -> list[dict[str, Any]]:

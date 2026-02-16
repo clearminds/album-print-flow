@@ -5,10 +5,8 @@ This module handles OAuth2 authentication for Google Photos API access.
 
 from __future__ import annotations
 
-import json
 import pickle
 from pathlib import Path
-from typing import Any
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -58,7 +56,11 @@ class GooglePhotosAuth:
                 self._credentials = None
 
         # Refresh if expired
-        if self._credentials and self._credentials.expired and self._credentials.refresh_token:
+        if (
+            self._credentials
+            and self._credentials.expired
+            and self._credentials.refresh_token
+        ):
             try:
                 self._credentials.refresh(Request())
                 self._save_token()
@@ -77,7 +79,8 @@ class GooglePhotosAuth:
         if not self.credentials_path or not self.credentials_path.exists():
             raise FileNotFoundError(
                 f"Credentials file not found: {self.credentials_path}\n"
-                "Please provide a valid OAuth2 credentials file from Google Cloud Console."
+                "Please provide a valid OAuth2 credentials file from "
+                "Google Cloud Console."
             )
 
         try:
