@@ -1725,6 +1725,12 @@ class MainWindow(QMainWindow):
         self.stamp_color_value = DEFAULT_STAMP_COLOR
         self.stamp_border_color_value = DEFAULT_STAMP_BORDER_COLOR
         self.stamp_vertical_value = False
+        # Location stamp global settings
+        self.location_stamp_enabled_value = False
+        self.location_stamp_corner_landscape_value = "Bottom Left"
+        self.location_stamp_corner_portrait_value = "Bottom Left"
+        self.location_stamp_offset_x_px = 15
+        self.location_stamp_offset_y_px = 15
         self.print_backend_value = "Auto"
         self.ipp_uri_value = ""
         self.ipp_wait_for_completion_value = False
@@ -1939,6 +1945,24 @@ class MainWindow(QMainWindow):
         datetime_layout.addWidget(self.datetime_override_clear_button)
         controls_layout.addRow("Date/Time", datetime_row)
         controls_layout.addRow("Override", self.datetime_override_label)
+
+        # Location info and per-image override
+        self.location_label = QLabel("No location")
+        self.location_label.setWordWrap(True)
+        self.location_label.setStyleSheet("color: #6B7280;")  # Gray color
+
+        self.location_override_checkbox = QCheckBox("Use Location Stamp")
+        self.location_override_checkbox.setChecked(False)
+        self.location_override_checkbox.setTristate(
+            True
+        )  # Three states: default, on, off
+        self.location_override_checkbox.stateChanged.connect(
+            self.on_location_override_changed
+        )
+
+        controls_layout.addRow("Location", self.location_label)
+        controls_layout.addRow("Stamp Override", self.location_override_checkbox)
+
         controls_layout.addRow("Last Print", self.print_status_label)
         controls_layout.addRow("Print Attempts", self.print_attempts_table)
 
@@ -2890,6 +2914,13 @@ class MainWindow(QMainWindow):
             crop_offset_y_percent = 0
         crop_offset_y_percent = max(-100, min(100, crop_offset_y_percent))
 
+        # Location stamp override: None = use global, True/False = explicit override
+        location_stamp_override = values.get("location_stamp_override")
+        if location_stamp_override is not None and not isinstance(
+            location_stamp_override, bool
+        ):
+            location_stamp_override = None
+
         return {
             "orientation": orientation,
             "brightness_percent": brightness,
@@ -2897,6 +2928,7 @@ class MainWindow(QMainWindow):
             "crop_zoom_percent": crop_zoom_percent,
             "crop_offset_x_percent": crop_offset_x_percent,
             "crop_offset_y_percent": crop_offset_y_percent,
+            "location_stamp_override": location_stamp_override,
         }
 
     def compute_file_hash(self, path: Path) -> str:
@@ -3359,6 +3391,31 @@ class MainWindow(QMainWindow):
             self.update_crop_orientation_button_text()
             dt_value = str(values.get("datetime_override", ""))
             self.datetime_override_label.setText(dt_value if dt_value else "Auto")
+
+            # Restore location override state (tristate)
+            location_override = values.get("location_stamp_override")
+            if location_override is None:
+                # PartiallyChecked = use global default
+                self.location_override_checkbox.setCheckState(
+                    Qt.CheckState.PartiallyChecked
+                )
+            elif location_override:
+                # Checked = force ON
+                self.location_override_checkbox.setCheckState(Qt.CheckState.Checked)
+            else:
+                # Unchecked = force OFF
+                self.location_override_checkbox.setCheckState(Qt.CheckState.Unchecked)
+
+            # Update location label
+            location = self.location_for_path(path)
+            if location:
+                self.location_label.setText(location)
+                self.location_label.setStyleSheet(
+                    "color: #10B981; font-weight: bold;"
+                )  # Green, bold
+            else:
+                self.location_label.setText("No location")
+                self.location_label.setStyleSheet("color: #6B7280;")  # Gray
         finally:
             self._restoring_settings = False
 
@@ -3709,15 +3766,42 @@ class MainWindow(QMainWindow):
         existing["crop_zoom_percent"] = self.crop_zoom_slider.value()
         existing["crop_offset_x_percent"] = self.crop_x_slider.value()
         existing["crop_offset_y_percent"] = self.crop_y_slider.value()
+
+        # Save location stamp override state (tristate)
+        state = self.location_override_checkbox.checkState()
+        if state == Qt.CheckState.PartiallyChecked:
+            existing.pop("location_stamp_override", None)  # Use default
+        elif state == Qt.CheckState.Checked:
+            existing["location_stamp_override"] = True  # Force ON
+        else:
+            existing["location_stamp_override"] = False  # Force OFF
+
         self.set_image_entry_file_hash(path, existing)
         image_settings[path.name] = existing
         self.save_folder_metadata()
         self.refresh_image_list_labels(path)
 
+    def on_location_override_changed(self, *_args) -> None:
+        """Handle location stamp override checkbox toggle."""
+        if self._restoring_settings:
+            return
+        # Save settings and refresh preview
+        self.on_image_settings_changed()
+        self.refresh_preview()
+
     def processing_settings_for_path(self, path: Path) -> ProcessingSettings:
         image_settings = self.image_settings_for_path(path)
 
         if path == self.selected_path():
+            # Get current UI state for location override
+            state = self.location_override_checkbox.checkState()
+            if state == Qt.CheckState.PartiallyChecked:
+                location_override = None
+            elif state == Qt.CheckState.Checked:
+                location_override = True
+            else:
+                location_override = False
+
             image_settings = {
                 **image_settings,
                 "orientation": self.current_image_orientation,
@@ -3725,6 +3809,7 @@ class MainWindow(QMainWindow):
                 "crop_zoom_percent": self.crop_zoom_slider.value(),
                 "crop_offset_x_percent": self.crop_x_slider.value(),
                 "crop_offset_y_percent": self.crop_y_slider.value(),
+                "location_stamp_override": location_override,
             }
 
         stamp_mode = "None"
@@ -3737,6 +3822,21 @@ class MainWindow(QMainWindow):
             corner = self.corner_portrait_value
         else:
             corner = self.corner_landscape_value
+
+        # Determine location stamp enabled state with override logic
+        location_override = image_settings.get("location_stamp_override")
+        if location_override is None:
+            # Use global default
+            location_stamp_enabled = self.location_stamp_enabled_value
+        else:
+            # Use explicit override
+            location_stamp_enabled = bool(location_override)
+
+        # Select location stamp corner based on orientation
+        if orientation == "Portrait":
+            location_corner = self.location_stamp_corner_portrait_value
+        else:
+            location_corner = self.location_stamp_corner_landscape_value
 
         return ProcessingSettings(
             orientation=orientation,
@@ -3758,6 +3858,11 @@ class MainWindow(QMainWindow):
             datetime_override=parse_datetime_override(
                 str(image_settings.get("datetime_override", ""))
             ),
+            # Location stamp settings
+            location_stamp_enabled=location_stamp_enabled,
+            location_stamp_corner=location_corner,
+            location_stamp_offset_x_px=self.location_stamp_offset_x_px,
+            location_stamp_offset_y_px=self.location_stamp_offset_y_px,
         )
 
     def refresh_preview(self) -> None:
@@ -3776,6 +3881,9 @@ class MainWindow(QMainWindow):
         )
 
         try:
+            # Get location for this image
+            location = self.location_for_path(path)
+
             if reframe_active:
                 with Image.open(path) as source:
                     image = source.convert("RGB")
@@ -3791,9 +3899,14 @@ class MainWindow(QMainWindow):
                     settings.brightness_percent / 100.0
                 )
                 image = apply_stamp(image, stamp_text(path, settings), settings)
+                # Apply location stamp in reframe mode too
+                if location:
+                    image = apply_location_stamp(image, location, settings)
                 self.preview_source_size = (max(1, image.width), max(1, image.height))
             else:
-                image = render_preview_image(path, settings, max_preview_dimension)
+                image = render_preview_image(
+                    path, settings, max_preview_dimension, location=location
+                )
                 self.preview_source_size = (0, 0)
         except OSError as error:
             QMessageBox.critical(self, "Preview failed", str(error))
@@ -4024,6 +4137,13 @@ class MainWindow(QMainWindow):
             "stamp_vertical_value": self.stamp_vertical_value,
             "stamp_color_value": self.stamp_color_value,
             "stamp_border_color_value": self.stamp_border_color_value,
+            "location_stamp_enabled_value": self.location_stamp_enabled_value,
+            "location_stamp_corner_landscape_value": (
+                self.location_stamp_corner_landscape_value
+            ),
+            "location_stamp_corner_portrait_value": (
+                self.location_stamp_corner_portrait_value
+            ),
         }
 
         layout = QVBoxLayout(dialog)
@@ -4369,6 +4489,92 @@ class MainWindow(QMainWindow):
         stamp_border_color_layout.setContentsMargins(0, 0, 0, 0)
         stamp_border_color_layout.addWidget(stamp_border_color_button)
         stamp_border_color_layout.addWidget(stamp_border_color_reset_button)
+
+        # Location stamp controls
+        location_stamp_enabled_checkbox = QCheckBox(
+            "Enable Location Stamp (global default)", dialog
+        )
+        location_stamp_enabled_checkbox.setChecked(self.location_stamp_enabled_value)
+        location_stamp_enabled_checkbox.setStyleSheet(
+            "font-weight: bold; color: #10B981;"
+        )
+
+        location_corner_landscape_combo = QComboBox(dialog)
+        location_corner_landscape_combo.addItems(
+            ["Bottom Right", "Bottom Left", "Top Right", "Top Left"]
+        )
+        location_corner_landscape_combo.setCurrentText(
+            self.location_stamp_corner_landscape_value
+        )
+
+        location_corner_portrait_combo = QComboBox(dialog)
+        location_corner_portrait_combo.addItems(
+            ["Bottom Right", "Bottom Left", "Top Right", "Top Left"]
+        )
+        location_corner_portrait_combo.setCurrentText(
+            self.location_stamp_corner_portrait_value
+        )
+
+        def validate_corners() -> None:
+            """Ensure date and location stamps don't use the same corner."""
+            # For landscape
+            date_corner_landscape = corner_landscape_combo.currentText()
+            location_corner_landscape = location_corner_landscape_combo.currentText()
+            if date_corner_landscape == location_corner_landscape:
+                # Disable the conflicting option
+                for i in range(location_corner_landscape_combo.count()):
+                    item_text = location_corner_landscape_combo.itemText(i)
+                    if item_text == date_corner_landscape:
+                        model = location_corner_landscape_combo.model()
+                        item = model.item(i)
+                        item.setEnabled(False)
+                        item.setToolTip("Cannot use same corner as date stamp")
+                    else:
+                        model = location_corner_landscape_combo.model()
+                        item = model.item(i)
+                        item.setEnabled(True)
+                        item.setToolTip("")
+                # Auto-select different corner
+                if location_corner_landscape == date_corner_landscape:
+                    for i in range(location_corner_landscape_combo.count()):
+                        text = location_corner_landscape_combo.itemText(i)
+                        if text != date_corner_landscape:
+                            location_corner_landscape_combo.setCurrentText(text)
+                            break
+
+            # For portrait
+            date_corner_portrait = corner_portrait_combo.currentText()
+            location_corner_portrait = location_corner_portrait_combo.currentText()
+            if date_corner_portrait == location_corner_portrait:
+                for i in range(location_corner_portrait_combo.count()):
+                    item_text = location_corner_portrait_combo.itemText(i)
+                    if item_text == date_corner_portrait:
+                        model = location_corner_portrait_combo.model()
+                        item = model.item(i)
+                        item.setEnabled(False)
+                        item.setToolTip("Cannot use same corner as date stamp")
+                    else:
+                        model = location_corner_portrait_combo.model()
+                        item = model.item(i)
+                        item.setEnabled(True)
+                        item.setToolTip("")
+                # Auto-select different corner
+                if location_corner_portrait == date_corner_portrait:
+                    for i in range(location_corner_portrait_combo.count()):
+                        text = location_corner_portrait_combo.itemText(i)
+                        if text != date_corner_portrait:
+                            location_corner_portrait_combo.setCurrentText(text)
+                            break
+
+        # Connect corner changes to validation
+        corner_landscape_combo.currentIndexChanged.connect(validate_corners)
+        corner_portrait_combo.currentIndexChanged.connect(validate_corners)
+        location_corner_landscape_combo.currentIndexChanged.connect(validate_corners)
+        location_corner_portrait_combo.currentIndexChanged.connect(validate_corners)
+
+        # Run initial validation
+        validate_corners()
+
         clear_image_settings_btn = QPushButton("Clear All Image Settings", dialog)
 
         crop_ratio_combo.currentIndexChanged.connect(
@@ -4475,7 +4681,7 @@ class MainWindow(QMainWindow):
 
         form.addRow(section_label("Crop & Layout"), QLabel("", dialog))
         form.addRow("Crop Ratio", crop_ratio_combo)
-        form.addRow(section_label("Stamp"), QLabel("", dialog))
+        form.addRow(section_label("Date Stamp"), QLabel("", dialog))
         form.addRow("Stamp", stamp_mode_combo)
         form.addRow("Time Format", clock_mode_combo)
         form.addRow("Corner (Landscape)", corner_landscape_combo)
@@ -4487,6 +4693,10 @@ class MainWindow(QMainWindow):
         form.addRow("Text Direction", stamp_vertical_checkbox)
         form.addRow("Stamp Color", stamp_color_row)
         form.addRow("Border Color", stamp_border_color_row)
+        form.addRow(section_label("Location Stamp"), QLabel("", dialog))
+        form.addRow("", location_stamp_enabled_checkbox)
+        form.addRow("Corner (Landscape)", location_corner_landscape_combo)
+        form.addRow("Corner (Portrait)", location_corner_portrait_combo)
         form.addRow(section_label("Folder Actions"), QLabel("", dialog))
         form.addRow("", clear_image_settings_btn)
         update_settings_stamp_preview()
@@ -4514,6 +4724,15 @@ class MainWindow(QMainWindow):
             self.stamp_border_color_value = str(
                 original_values["stamp_border_color_value"]
             )
+            self.location_stamp_enabled_value = bool(
+                original_values["location_stamp_enabled_value"]
+            )
+            self.location_stamp_corner_landscape_value = str(
+                original_values["location_stamp_corner_landscape_value"]
+            )
+            self.location_stamp_corner_portrait_value = str(
+                original_values["location_stamp_corner_portrait_value"]
+            )
             self.refresh_preview()
             return
 
@@ -4529,6 +4748,13 @@ class MainWindow(QMainWindow):
         self.stamp_vertical_value = stamp_vertical_checkbox.isChecked()
         self.stamp_color_value = stamp_color_value
         self.stamp_border_color_value = stamp_border_color_value
+        self.location_stamp_enabled_value = location_stamp_enabled_checkbox.isChecked()
+        self.location_stamp_corner_landscape_value = (
+            location_corner_landscape_combo.currentText()
+        )
+        self.location_stamp_corner_portrait_value = (
+            location_corner_portrait_combo.currentText()
+        )
 
         preferred = self.selected_path()
         self.apply_sort_order(preferred)
@@ -5306,7 +5532,10 @@ class MainWindow(QMainWindow):
             for path in paths:
                 out = Path(temp_dir) / f"{path.stem}.jpg"
                 try:
-                    image = render_image(path, self.processing_settings_for_path(path))
+                    location = self.location_for_path(path)
+                    image = render_image(
+                        path, self.processing_settings_for_path(path), location=location
+                    )
                     if borderless:
                         image = apply_borderless_content_scale(
                             image,
@@ -5453,7 +5682,10 @@ class MainWindow(QMainWindow):
                     printer.newPage()
 
                 try:
-                    image = render_image(path, self.processing_settings_for_path(path))
+                    location = self.location_for_path(path)
+                    image = render_image(
+                        path, self.processing_settings_for_path(path), location=location
+                    )
                 except OSError as error:
                     failed.append(path.name)
                     self.append_log(
