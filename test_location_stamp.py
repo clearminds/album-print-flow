@@ -4,12 +4,12 @@
 import sys
 from pathlib import Path
 
-from PIL import Image
-
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from album_printer.app import (
+from PIL import Image  # noqa: E402
+
+from album_printer.app import (  # noqa: E402
     ProcessingSettings,
     apply_location_stamp,
     render_image,
@@ -42,7 +42,7 @@ def test_location_stamp():
 
     # Test 2: Disabled location stamp
     settings2 = ProcessingSettings(location_stamp_enabled=False)
-    result2 = apply_location_stamp(img.copy(), test_location, settings2)
+    _ = apply_location_stamp(img.copy(), test_location, settings2)
     print("✓ Test 2 passed: Location stamp disabled (no stamp applied)")
 
     # Test 3: Different corners
@@ -56,7 +56,7 @@ def test_location_stamp():
         corner_safe = corner.replace(" ", "_").lower()
         corner_output = Path(f"/tmp/test_location_stamp_{corner_safe}.jpg")
         result3.save(corner_output, "JPEG")
-        print(f"✓ Test 3.{corners.index(corner)+1} passed: Corner {corner}")
+        print(f"✓ Test 3.{corners.index(corner) + 1} passed: Corner {corner}")
 
     # Test 4: Full render with both date and location stamps
     settings4 = ProcessingSettings(
@@ -71,9 +71,7 @@ def test_location_stamp():
     print(f"✓ Test 4 passed: Both date and location stamps applied to {dual_output}")
 
     print("\n✅ All location stamp tests passed!")
-    print(
-        f"\nGenerated test images in /tmp/ - check them to verify stamp positioning."
-    )
+    print("\nGenerated test images in /tmp/ - check them to verify stamp positioning.")
 
 
 if __name__ == "__main__":
