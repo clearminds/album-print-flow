@@ -114,3 +114,11 @@ Output bundle is in `dist/`:
 - Unsigned packages for now (signing/notarization roadmap later).
 - macOS users may need to allow the app in Gatekeeper on first launch.
 - Windows users may see SmartScreen warnings until code signing is added.
+
+## Third-party attributions
+
+- See `THIRD_PARTY_NOTICES.md` for bundled fonts/assets and source/license references.
+
+## Project TODO
+
+- See `TODO.md` for the current direct IPP borderless printing work checklist.
