@@ -40,9 +40,7 @@ def main():
         print(f"❌ Credentials not found at: {credentials_path}")
         print()
         print("Please follow the setup instructions in GOOGLE_PHOTOS_SETUP.md")
-        print(
-            "to create OAuth credentials and place them at the path shown above."
-        )
+        print("to create OAuth credentials and place them at the path shown above.")
         return 1
 
     print(f"✓ Found credentials at: {credentials_path}")
@@ -52,9 +50,7 @@ def main():
     print("Step 1: Authenticating with Google Photos...")
     print("-" * 70)
 
-    auth = GooglePhotosAuth(
-        credentials_path=credentials_path, token_path=token_path
-    )
+    auth = GooglePhotosAuth(credentials_path=credentials_path, token_path=token_path)
 
     if not auth.is_authenticated():
         print("No valid token found. Starting authentication flow...")

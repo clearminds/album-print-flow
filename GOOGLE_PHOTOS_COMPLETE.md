@@ -8,7 +8,7 @@ Google Photos integration has been **successfully implemented** for Album Print 
 
 ### ✅ Complete Feature Set
 
-#### 1. **OAuth2 Authentication** 
+#### 1. **OAuth2 Authentication**
 - Secure authentication using Google's official OAuth2 flow
 - Browser-based sign-in (local server)
 - Automatic token storage and refresh
