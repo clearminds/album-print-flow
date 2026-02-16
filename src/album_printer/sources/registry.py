@@ -94,9 +94,7 @@ def _register_builtin_adapters(registry: SourceRegistry) -> None:
     """
     # Import adapters here to avoid circular dependencies
     from album_printer.sources.folder_source import FolderSource
+    from album_printer.sources.google_photos_source import GooglePhotosSource
 
     registry.register(FolderSource())
-
-    # Google Photos will be registered when implemented
-    # from album_printer.sources.google_photos_source import GooglePhotosSource
-    # registry.register(GooglePhotosSource())
+    registry.register(GooglePhotosSource())

@@ -6,7 +6,7 @@ Desktop tool to load a folder of photos, crop to print ratio, apply lightweight 
 
 - **Source abstraction layer**: Pluggable architecture for loading images from multiple sources
   - Folder-based loading (`jpg`, `jpeg`, `png`, `webp`, `tif`, `tiff`)
-  - Google Photos integration (stub for future implementation)
+  - **Google Photos integration** (OAuth2, album loading, automatic caching)
   - Stable asset IDs for cross-import metadata continuity
 - Per-image crop controls:
   - Ratios: `2:3`, `3:4`, `4:5`, `1:1`, `16:9`
@@ -110,7 +110,12 @@ Album Print Flow uses a pluggable source architecture to support loading images 
 ### Current sources
 
 - **FolderSource**: Loads images from local filesystem folders
-- **GooglePhotosSource**: Stub for future Google Photos integration
+- **GooglePhotosSource**: Loads images from Google Photos albums
+  - OAuth2 authentication
+  - Album listing and selection
+  - Automatic photo caching
+  - Location and datetime metadata extraction
+  - See [GOOGLE_PHOTOS_SETUP.md](GOOGLE_PHOTOS_SETUP.md) for setup instructions
 
 ### Key components
 
