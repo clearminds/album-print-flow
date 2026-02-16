@@ -1799,6 +1799,9 @@ class MainWindow(QMainWindow):
         load_button = QPushButton("Load Folder")
         load_button.clicked.connect(self.load_folder)
 
+        self.load_google_photos_button = QPushButton("Load from Google Photos")
+        self.load_google_photos_button.clicked.connect(self.load_google_photos)
+
         self.refresh_folder_button = QPushButton("Refresh Folder")
         self.refresh_folder_button.clicked.connect(self.refresh_folder)
 
@@ -2013,6 +2016,7 @@ class MainWindow(QMainWindow):
 
         top_actions = QHBoxLayout()
         top_actions.addWidget(load_button)
+        top_actions.addWidget(self.load_google_photos_button)
         top_actions.addWidget(self.refresh_folder_button)
         top_actions.addWidget(prev_button)
         top_actions.addWidget(next_button)
@@ -2416,6 +2420,10 @@ class MainWindow(QMainWindow):
         load_action = QAction("Load Folder", self)
         load_action.triggered.connect(self.load_folder)
         file_menu.addAction(load_action)
+
+        load_google_photos_action = QAction("Load from Google Photos", self)
+        load_google_photos_action.triggered.connect(self.load_google_photos)
+        file_menu.addAction(load_google_photos_action)
 
         self.refresh_folder_action = QAction("Refresh Folder", self)
         self.refresh_folder_action.triggered.connect(self.refresh_folder)
@@ -5376,6 +5384,240 @@ class MainWindow(QMainWindow):
         self.load_folder_path(
             Path(folder), open_settings_if_new=True, preferred_path=None
         )
+
+    def load_google_photos(self) -> None:
+        """Load photos from Google Photos."""
+        try:
+            from album_printer.sources import get_source_registry
+
+            # Get Google Photos source
+            registry = get_source_registry()
+            google_source = registry.get_adapter("google_photos")
+
+            if google_source is None:
+                QMessageBox.critical(
+                    self,
+                    "Google Photos Not Available",
+                    "Google Photos integration is not available.",
+                )
+                return
+
+            # Setup paths
+            config_dir = Path.home() / ".config" / "album_printer"
+            credentials_path = config_dir / "google_photos_credentials.json"
+            token_path = config_dir / ".google_photos_token.pickle"
+
+            # Check for credentials
+            if not credentials_path.exists():
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Icon.Information)
+                msg.setWindowTitle("Google Photos Setup Required")
+                msg.setText(
+                    "Google Photos credentials not found.\n\n"
+                    "To use Google Photos:\n"
+                    "1. Follow the setup guide in GOOGLE_PHOTOS_SETUP.md\n"
+                    "2. Create OAuth credentials in Google Cloud Console\n"
+                    "3. Save credentials to:\n"
+                    f"   {credentials_path}"
+                )
+                msg.setDetailedText(
+                    "See GOOGLE_PHOTOS_SETUP.md in the project directory "
+                    "for complete setup instructions."
+                )
+                msg.exec()
+                return
+
+            # Setup authentication
+            google_source.auth.credentials_path = credentials_path
+            google_source.auth.token_path = token_path
+
+            # Check authentication
+            if not google_source.auth.is_authenticated():
+                reply = QMessageBox.question(
+                    self,
+                    "Authenticate with Google Photos",
+                    "You need to authenticate with Google Photos.\n\n"
+                    "A browser window will open for you to sign in.\n\n"
+                    "Continue?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+
+                try:
+                    google_source.authenticate()
+                except Exception as e:
+                    QMessageBox.critical(
+                        self,
+                        "Authentication Failed",
+                        f"Failed to authenticate with Google Photos:\n\n{e}",
+                    )
+                    return
+
+            # Show album selection dialog
+            self.show_album_selection_dialog(google_source)
+
+        except ImportError as e:
+            QMessageBox.critical(
+                self,
+                "Google Photos Unavailable",
+                f"Google Photos dependencies not installed:\n\n{e}\n\n"
+                "Install with: pip install google-auth google-auth-oauthlib "
+                "google-api-python-client",
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to load Google Photos:\n\n{e}",
+            )
+
+    def show_album_selection_dialog(self, google_source) -> None:
+        """Show dialog to select a Google Photos album."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Select Google Photos Album")
+        dialog.resize(600, 400)
+
+        layout = QVBoxLayout(dialog)
+
+        # Info label
+        info_label = QLabel(
+            "Loading albums from Google Photos...\nThis may take a moment."
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+
+        # Album list
+        from PySide6.QtWidgets import QListWidget, QListWidgetItem
+
+        album_list = QListWidget()
+        layout.addWidget(album_list)
+
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+
+        # Disable OK until album is selected
+        button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+
+        def on_selection_changed():
+            button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(
+                len(album_list.selectedItems()) > 0
+            )
+
+        album_list.itemSelectionChanged.connect(on_selection_changed)
+
+        # Load albums in background
+        try:
+            # Create client
+            if google_source.client is None:
+                from album_printer.sources.google_photos_client import (
+                    GooglePhotosClient,
+                )
+
+                google_source.client = GooglePhotosClient(google_source.auth)
+
+            albums = google_source.client.list_albums()
+
+            if not albums:
+                info_label.setText("No albums found in your Google Photos.")
+                return
+
+            info_label.setText(
+                f"Found {len(albums)} albums. Select one to load photos:"
+            )
+
+            # Populate list
+            for album in albums:
+                title = album.get("title", "Untitled")
+                count = album.get("mediaItemsCount", "?")
+                item = QListWidgetItem(f"{title} ({count} photos)")
+                item.setData(Qt.ItemDataRole.UserRole, album.get("id"))
+                album_list.addItem(item)
+
+        except Exception as e:
+            info_label.setText(f"Error loading albums: {e}")
+            QMessageBox.critical(
+                dialog,
+                "Error",
+                f"Failed to load albums:\n\n{e}",
+            )
+            return
+
+        # Show dialog
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            selected_items = album_list.selectedItems()
+            if selected_items:
+                album_id = selected_items[0].data(Qt.ItemDataRole.UserRole)
+                album_title = selected_items[0].text()
+                self.load_google_photos_album(google_source, album_id, album_title)
+
+    def load_google_photos_album(
+        self, google_source, album_id: str, album_title: str
+    ) -> None:
+        """Load photos from a Google Photos album."""
+        try:
+            # Show progress dialog
+            progress = QMessageBox(self)
+            progress.setWindowTitle("Loading Photos")
+            progress.setText(f"Loading photos from album:\n{album_title}")
+            progress.setStandardButtons(QMessageBox.StandardButton.NoButton)
+            progress.setModal(False)
+            progress.show()
+            QApplication.processEvents()
+
+            # Load photos
+            result = google_source.load({"album_id": album_id})
+
+            progress.close()
+
+            if not result.assets:
+                QMessageBox.information(
+                    self,
+                    "No Photos",
+                    f"No photos found in album:\n{album_title}",
+                )
+                return
+
+            # Convert assets to image paths
+            self.image_paths = [asset.local_path for asset in result.assets]
+            self.current_folder = result.metadata_path
+            self.current_index = -1
+
+            # Load metadata for Google Photos source
+            self.load_folder_metadata()
+
+            # Populate table
+            self.populate_image_list()
+
+            # Select first image
+            if self.image_paths:
+                self.select_image_at_index(0)
+
+            self.append_log(
+                "INFO",
+                f"Loaded {len(result.assets)} photos from Google Photos: {album_title}",
+            )
+
+            QMessageBox.information(
+                self,
+                "Photos Loaded",
+                f"Successfully loaded {len(result.assets)} photos from:\n"
+                f"{album_title}\n\n"
+                f"Photos cached at:\n{google_source.cache_dir}",
+            )
+
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error Loading Photos",
+                f"Failed to load photos from album:\n\n{e}",
+            )
 
     def refresh_folder(self) -> None:
         if self.current_folder is None:
