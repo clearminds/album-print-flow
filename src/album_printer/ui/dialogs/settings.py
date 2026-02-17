@@ -101,7 +101,9 @@ def open_settings_dialog(
 
     layout.addWidget(section_label("Nominatim"))
     nominatim_info = QLabel(
-        "Public Nominatim policy: maximum 1 request/second, identifiable User-Agent, and local caching. Used for non-coordinate location formats.",
+        "Public Nominatim policy: maximum 1 request/second, "
+        "identifiable User-Agent, and local caching. "
+        "Used for non-coordinate location formats.",
         dialog,
     )
     nominatim_info.setWordWrap(True)

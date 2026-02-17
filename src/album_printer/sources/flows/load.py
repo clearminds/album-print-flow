@@ -85,7 +85,8 @@ def handle_load_google_photos(window: Any) -> None:
             window.append_log(
                 "WARNING",
                 "GOOGLE Picker metadata limitation: "
-                f"{missing_location_assets}/{total_assets} item(s) missing location metadata",
+                f"{missing_location_assets}/{total_assets} item(s) "
+                "missing location metadata",
             )
             QMessageBox.information(
                 window,

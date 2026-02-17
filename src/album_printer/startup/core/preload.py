@@ -77,7 +77,8 @@ def run_startup_preload_tasks(
         except Exception as error:
             elapsed_ms = (time.perf_counter() - task_started_at) * 1000
             startup_debug_lines.append(
-                f"Startup preload {task.task_id}: failed ({error}) in {elapsed_ms:.1f} ms"
+                f"Startup preload {task.task_id}: "
+                f"failed ({error}) in {elapsed_ms:.1f} ms"
             )
             preload_results[task.task_id] = {
                 "ok": False,

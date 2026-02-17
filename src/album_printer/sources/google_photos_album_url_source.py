@@ -117,7 +117,7 @@ def _rational_to_float(value: object) -> float | None:
 
 
 def _gps_components_to_degrees(value: object) -> float | None:
-    if not isinstance(value, (tuple, list)) or len(value) != 3:
+    if not isinstance(value, tuple | list) or len(value) != 3:
         return None
     deg = _rational_to_float(value[0])
     minute = _rational_to_float(value[1])
@@ -132,7 +132,7 @@ def _gps_decimal(ref: object, value: object) -> float | None:
     if degrees is None:
         return None
     sign = 1.0
-    if isinstance(ref, (bytes, bytearray)):
+    if isinstance(ref, bytes | bytearray):
         try:
             ref = ref.decode("utf-8", errors="ignore")
         except Exception:
@@ -201,8 +201,10 @@ class GooglePhotosAlbumUrlSource:
     source_id = "google-photos-album-url"
     label = "Google Photos Album URL"
     help_text = (
-        "Loads a shared Google Photos album URL (photos.app.goo.gl / photos.google.com).\n"
-        "Designed for metadata-friendly downloads where available (tries original download variant first).\n"
+        "Loads a shared Google Photos album URL "
+        "(photos.app.goo.gl / photos.google.com).\n"
+        "Designed for metadata-friendly downloads where available "
+        "(tries original download variant first).\n"
         "Great for shared family albums and quick reload checks for newly added photos."
     )
 
@@ -744,7 +746,7 @@ class GooglePhotosAlbumUrlSource:
             item_entries.sort(
                 key=lambda value: (
                     int(value.get("order", 0))
-                    if isinstance(value.get("order", 0), (int, float))
+                    if isinstance(value.get("order", 0), int | float)
                     else 0
                 )
             )
@@ -763,10 +765,10 @@ class GooglePhotosAlbumUrlSource:
                 latitude = entry.get("latitude")
                 longitude = entry.get("longitude")
                 lat_value = (
-                    float(latitude) if isinstance(latitude, (int, float)) else None
+                    float(latitude) if isinstance(latitude, int | float) else None
                 )
                 lon_value = (
-                    float(longitude) if isinstance(longitude, (int, float)) else None
+                    float(longitude) if isinstance(longitude, int | float) else None
                 )
                 base_url = _sanitize_text(str(entry.get("base_url", "")))
                 source_data = {
@@ -1420,10 +1422,10 @@ class GooglePhotosAlbumUrlSource:
                 latitude = previous_entry.get("latitude")
                 longitude = previous_entry.get("longitude")
                 lat_value = (
-                    float(latitude) if isinstance(latitude, (int, float)) else None
+                    float(latitude) if isinstance(latitude, int | float) else None
                 )
                 lon_value = (
-                    float(longitude) if isinstance(longitude, (int, float)) else None
+                    float(longitude) if isinstance(longitude, int | float) else None
                 )
                 if lat_value is None or lon_value is None:
                     web_location = web_location_map.get(base_url)
@@ -1542,10 +1544,8 @@ class GooglePhotosAlbumUrlSource:
                 captured_at = web_captured_at_map.get(base_url)
             latitude = entry.get("latitude")
             longitude = entry.get("longitude")
-            lat_value = float(latitude) if isinstance(latitude, (int, float)) else None
-            lon_value = (
-                float(longitude) if isinstance(longitude, (int, float)) else None
-            )
+            lat_value = float(latitude) if isinstance(latitude, int | float) else None
+            lon_value = float(longitude) if isinstance(longitude, int | float) else None
 
             if lat_value is None or lon_value is None:
                 web_location = web_location_map.get(base_url)

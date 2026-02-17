@@ -62,7 +62,8 @@ def start_thumbnail_generation(
     if migrated > 0:
         window.append_log(
             "DEBUG",
-            f"Thumbnail cache migration renamed {migrated} legacy file(s) to hashed format",
+            "Thumbnail cache migration renamed "
+            f"{migrated} legacy file(s) to hashed format",
         )
     pending: list[Path] = []
     warmed = 0

@@ -23,7 +23,8 @@ def open_source_guide_dialog(window: Any) -> None:
 
     root_layout = QVBoxLayout(dialog)
     intro = QLabel(
-        "Choose how to load photos. Each source can be launched directly from this guide."
+        "Choose how to load photos. "
+        "Each source can be launched directly from this guide."
     )
     intro.setWordWrap(True)
     root_layout.addWidget(intro)

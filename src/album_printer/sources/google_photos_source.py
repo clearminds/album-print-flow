@@ -158,8 +158,10 @@ class GooglePhotosSource:
     label = "Google Photos Photo Picker"
     help_text = (
         "Uses Google Photos Photo Picker API.\n"
-        "You pick items from your Google Photos account and the app downloads them to local cache.\n"
-        "Fast and convenient, but some items may miss location metadata depending on Google output."
+        "You pick items from your Google Photos account and the app "
+        "downloads them to local cache.\n"
+        "Fast and convenient, but some items may miss location metadata "
+        "depending on Google output."
     )
 
     def __init__(
@@ -769,7 +771,8 @@ class GooglePhotosSource:
             "Set up OAuth Desktop credentials in Google Cloud:\n"
             "1) Google Cloud Console -> APIs & Services -> OAuth consent screen\n"
             "2) Create consent screen and add your test user\n"
-            "3) APIs & Services -> Credentials -> Create Credentials -> OAuth client ID\n"
+            "3) APIs & Services -> Credentials -> Create Credentials -> "
+            "OAuth client ID\n"
             "4) Application type: Desktop app\n"
             "5) Download the JSON\n\n"
             "Then import it here (recommended path):\n"
@@ -945,7 +948,8 @@ class GooglePhotosSource:
         contexts["last_account_id"] = account_id
         self.save_contexts(contexts)
         self._info(
-            f"Added account id={account_id} email={email or '-'} display={display_name or '-'}"
+            "Added account "
+            f"id={account_id} email={email or '-'} display={display_name or '-'}"
         )
         return account_id, session
 
@@ -1107,7 +1111,8 @@ class GooglePhotosSource:
             "Google Photos",
             "Google setup looks good.\n\n"
             f"Active account: {account_id}\n"
-            "OAuth client JSON is valid, sign-in works, and Google Photos API access is reachable.",
+            "OAuth client JSON is valid, sign-in works, and Google Photos "
+            "API access is reachable.",
         )
         return True
 
@@ -1209,7 +1214,8 @@ class GooglePhotosSource:
                 if progress.wasCanceled():
                     cancelled = True
                     self._debug(
-                        f"OAuth cancelled by user; signaling callback server on port {oauth_port}"
+                        "OAuth cancelled by user; "
+                        f"signaling callback server on port {oauth_port}"
                     )
                     self._signal_oauth_cancel(oauth_port)
                     break
@@ -1346,7 +1352,8 @@ class GooglePhotosSource:
         progress.setWindowTitle("Google Photos Picker")
         progress.setLabelText(
             "Waiting for Google Photos selection...\n"
-            "Use your browser window, search by album title if needed, then return here."
+            "Use your browser window, search by album title if needed, "
+            "then return here."
         )
         progress.setCancelButtonText("Cancel")
         progress.setRange(0, 0)
@@ -1654,7 +1661,8 @@ class GooglePhotosSource:
 
         self._info(
             "Picker media cache summary: "
-            f"account={safe_account} downloaded={downloaded_count} reused={reused_count}"
+            f"account={safe_account} downloaded={downloaded_count} "
+            f"reused={reused_count}"
         )
 
         return assets, picker_cache_dir
@@ -2197,7 +2205,8 @@ class GooglePhotosSource:
                 picked_items_result if isinstance(picked_items_result, list) else []
             )
             self._debug(
-                f"Picker selected raw item count={len(picked_items)} session={picker_session_id}"
+                "Picker selected raw item count="
+                f"{len(picked_items)} session={picker_session_id}"
             )
             for index, item in enumerate(picked_items, start=1):
                 try:
@@ -2236,7 +2245,8 @@ class GooglePhotosSource:
                 raise RuntimeError("Invalid picker download result")
             assets, metadata_root = download_result
             self._debug(
-                f"Picker normalized asset count={len(assets)} metadata_root={metadata_root}"
+                "Picker normalized asset count="
+                f"{len(assets)} metadata_root={metadata_root}"
             )
             for index, asset in enumerate(assets, start=1):
                 captured_text = (
@@ -2279,7 +2289,9 @@ class GooglePhotosSource:
                 source_id=self.source_id,
                 source_label=self.label,
                 context_id=context_id,
-                context_label=f"Google Photos ({account_id}) [Picker]: {len(assets)} item(s)",
+                context_label=(
+                    f"Google Photos ({account_id}) [Picker]: {len(assets)} item(s)"
+                ),
                 assets=assets,
                 metadata_root=metadata_root,
                 is_new_context=not (metadata_root / ".album_printer.json").exists(),

@@ -102,7 +102,10 @@ def format_location(
     if selected_format == "Lat/Lon":
         return f"{latitude:.5f}, {longitude:.5f}"
     if selected_format == "DMS":
-        return f"{decimal_to_dms_fn(latitude, True)}, {decimal_to_dms_fn(longitude, False)}"
+        return (
+            f"{decimal_to_dms_fn(latitude, True)}, "
+            f"{decimal_to_dms_fn(longitude, False)}"
+        )
     if location_format_needs_reverse_lookup_fn(selected_format):
         best_available = window.reverse_geocode_nominatim(
             location,

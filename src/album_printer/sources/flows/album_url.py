@@ -54,7 +54,8 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
         )
         window.refresh_footer_progress_action()
         window.statusBar().showMessage(
-            f"Syncing album… discovered {current_count} item(s); applying updates when sync completes"
+            "Syncing album… discovered "
+            f"{current_count} item(s); applying updates when sync completes"
         )
         return
 
@@ -84,7 +85,8 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
         )
         window.refresh_footer_progress_action()
         window.statusBar().showMessage(
-            f"Syncing album… discovered {current_count} item(s); applying updates when sync completes"
+            "Syncing album… discovered "
+            f"{current_count} item(s); applying updates when sync completes"
         )
         return
 
@@ -144,7 +146,8 @@ def handle_load_google_photos_album_url(window: Any, worker_cls: Any) -> None:
     if not callable(choose_method):
         window.append_log(
             "WARNING",
-            "GOOGLE_ALBUM_URL adapter missing choose_album_url_via_ui; using blocking load",
+            "GOOGLE_ALBUM_URL adapter missing choose_album_url_via_ui; "
+            "using blocking load",
         )
         result = adapter.load_via_ui(window)
         if result is None:
@@ -191,7 +194,8 @@ def handle_load_google_photos_album_url(window: Any, worker_cls: Any) -> None:
                         preferred_path=None,
                     )
                     window.statusBar().showMessage(
-                        f"Loaded cached album view ({len(cached_result.assets)} items). Syncing updates…"
+                        "Loaded cached album view "
+                        f"({len(cached_result.assets)} items). Syncing updates…"
                     )
                     window.append_log(
                         "INFO",
@@ -292,7 +296,8 @@ def handle_source_load_finished(
             asset.local_path: asset for asset in result.assets
         }
         window.statusBar().showMessage(
-            f"Google Photos Album URL sync complete ({len(new_paths)} items, no list changes)",
+            "Google Photos Album URL sync complete "
+            f"({len(new_paths)} items, no list changes)",
             1800,
         )
         window.append_log(
@@ -316,7 +321,8 @@ def handle_source_load_finished(
     if isinstance(payload, dict) and not bool(payload.get("loaded_from_bookmark")):
         window.append_log(
             "DEBUG",
-            "GOOGLE_ALBUM_URL background load skipped modal bookmark prompt; use Settings to save entries",
+            "GOOGLE_ALBUM_URL background load skipped modal bookmark prompt; "
+            "use Settings to save entries",
         )
 
     window.append_log(

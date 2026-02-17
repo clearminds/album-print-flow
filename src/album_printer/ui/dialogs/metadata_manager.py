@@ -26,13 +26,15 @@ def open_metadata_manager_dialog(window: Any) -> None:
 
     layout = QVBoxLayout(dialog)
     intro = QLabel(
-        "Inspect metadata usage and clear or rebuild metadata for current/source/global scope."
+        "Inspect metadata usage and clear or rebuild metadata "
+        "for current/source/global scope."
     )
     intro.setWordWrap(True)
     layout.addWidget(intro)
     warning_label = QLabel(
         "⚠ Some actions are destructive and cannot be undone. "
-        "Clearing metadata removes per-image overrides, print state history, and lookup cache entries for affected scopes."
+        "Clearing metadata removes per-image overrides, print state history, "
+        "and lookup cache entries for affected scopes."
     )
     warning_label.setWordWrap(True)
     layout.addWidget(warning_label)
@@ -167,7 +169,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
             window.metadata_root_path()
         )
         global_metadata_value.setText(
-            f"{all_metadata_count} files • {window.format_storage_size(all_metadata_size)}"
+            f"{all_metadata_count} files • "
+            f"{window.format_storage_size(all_metadata_size)}"
         )
         global_metadata_path_value.setText(str(window.metadata_root_path()))
 
@@ -175,7 +178,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
         index_entries = load_index_entries(index_path)
         index_count, index_size = window.path_storage_stats(index_path)
         index_value.setText(
-            f"{len(index_entries)} entries • {index_count} file • {window.format_storage_size(index_size)}"
+            f"{len(index_entries)} entries • {index_count} file • "
+            f"{window.format_storage_size(index_size)}"
         )
         index_path_value.setText(str(index_path))
 
@@ -231,7 +235,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
         if not confirm(
             "Clear Current Metadata",
             "Clear metadata for current source context?",
-            "Per-image overrides, print flags, and logs for this context will be removed.",
+            "Per-image overrides, print flags, and logs for this context "
+            "will be removed.",
         ):
             return
         count, size = window.remove_path_tree(metadata_path)
@@ -241,7 +246,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
             window.update_selected_print_info()
         window.append_log(
             "INFO",
-            f"Metadata Manager cleared current metadata: {count} file(s), {window.format_storage_size(size)}",
+            "Metadata Manager cleared current metadata: "
+            f"{count} file(s), {window.format_storage_size(size)}",
         )
         window.statusBar().showMessage("Cleared current metadata")
         update_stats()
@@ -269,7 +275,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
             window.update_selected_print_info()
         window.append_log(
             "INFO",
-            f"Metadata Manager cleared source metadata ({source_id}): {count} file(s), {window.format_storage_size(size)}",
+            "Metadata Manager cleared source metadata "
+            f"({source_id}): {count} file(s), {window.format_storage_size(size)}",
         )
         window.statusBar().showMessage(f"Cleared metadata for source {source_id}")
         update_stats()
@@ -294,7 +301,8 @@ def open_metadata_manager_dialog(window: Any) -> None:
             window.update_selected_print_info()
         window.append_log(
             "INFO",
-            f"Metadata Manager cleared all metadata: {count} file(s), {window.format_storage_size(size)}",
+            "Metadata Manager cleared all metadata: "
+            f"{count} file(s), {window.format_storage_size(size)}",
         )
         window.statusBar().showMessage("Cleared all metadata")
         update_stats()

@@ -81,7 +81,7 @@ def _rational_to_float(value: object) -> float | None:
 
 
 def _dms_to_decimal(dms_values: object, ref: str) -> float | None:
-    if not isinstance(dms_values, (list, tuple)) or len(dms_values) < 3:
+    if not isinstance(dms_values, list | tuple) or len(dms_values) < 3:
         return None
 
     degrees = _rational_to_float(dms_values[0])

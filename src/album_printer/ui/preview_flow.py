@@ -82,7 +82,9 @@ def processing_settings_for_path(
             "crop_zoom_percent": window.crop_zoom_slider.value(),
             "crop_offset_x_percent": window.crop_x_slider.value(),
             "crop_offset_y_percent": window.crop_y_slider.value(),
-            "location_stamp_mode_override": window.location_stamp_override_combo.currentText(),
+            "location_stamp_mode_override": (
+                window.location_stamp_override_combo.currentText()
+            ),
             "location_stamp_custom_text": window.current_custom_location_text(),
         }
 

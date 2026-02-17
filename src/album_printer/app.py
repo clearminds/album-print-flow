@@ -18,32 +18,18 @@ try:
     import rawpy
 except Exception:
     rawpy = None
-from PySide6.QtCore import (
-    QThread,
-    Signal,
-)
-from PySide6.QtGui import (
-    QAction,
-    QPixmap,
-)
-from PySide6.QtWidgets import (
-    QComboBox,
-    QMainWindow,
-    QMessageBox,
-    QSplashScreen,
-)
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtGui import QAction, QPixmap
+from PySide6.QtWidgets import QComboBox, QMainWindow, QMessageBox, QSplashScreen
 
 from album_printer.app_branding import app_about_text as app_about_text_impl
 from album_printer.app_branding import app_branding_info as app_branding_info_impl
 from album_printer.app_branding import app_runtime_line as app_runtime_line_impl
 from album_printer.app_branding import app_version as app_version_impl
-from album_printer.app_branding import (
-    app_window_icon,
-    load_clearminds_head_pixmap,
-    load_logo_pixmap,
-)
+from album_printer.app_branding import app_window_icon
 from album_printer.app_branding import create_splash_screen as create_splash_screen_impl
 from album_printer.app_branding import is_debugger_attached as is_debugger_attached_impl
+from album_printer.app_branding import load_clearminds_head_pixmap, load_logo_pixmap
 from album_printer.app_primitives import (
     _dms_to_decimal,
     _normalized_geocodejson_feature,
@@ -423,7 +409,7 @@ from album_printer.startup import (
 )
 from album_printer.startup.app_runner import run_application as run_application_flow
 from album_printer.ui.album_sync_status_flow import (
-    maybe_update_album_sync_status_from_log as maybe_update_album_sync_status_from_log_flow,
+    maybe_update_album_sync_status_from_log as maybe_update_album_sync_status_flow,
 )
 from album_printer.ui.control_visibility_flow import (
     update_aspect_navigation_buttons as update_aspect_navigation_buttons_flow,
@@ -2018,7 +2004,7 @@ class MainWindow(QMainWindow):
         )
 
     def maybe_update_album_sync_status_from_log(self, level: str, message: str) -> bool:
-        return maybe_update_album_sync_status_from_log_flow(
+        return maybe_update_album_sync_status_flow(
             self,
             level,
             message,
@@ -2032,15 +2018,17 @@ class MainWindow(QMainWindow):
         clear_footer_progress_flow(self)
 
     def gps_resolution_progress_counts(self) -> tuple[int, int]:
+        lookup_required = location_format_needs_reverse_lookup
         return gps_resolution_progress_counts_flow(
             self,
-            location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
+            location_format_needs_reverse_lookup_fn=lookup_required,
         )
 
     def refresh_gps_resolution_progress(self) -> None:
+        lookup_required = location_format_needs_reverse_lookup
         refresh_gps_resolution_progress_flow(
             self,
-            location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
+            location_format_needs_reverse_lookup_fn=lookup_required,
         )
 
     def set_footer_progress_action(
@@ -2553,6 +2541,8 @@ class MainWindow(QMainWindow):
         print_quality_value: str,
         scale_values: list[int],
     ) -> tuple[int, list[str]]:
+        calibration_flow = print_borderless_calibration_pages_flow
+        calibration_kwargs = PRINT_BORDERLESS_CALIBRATION_FLOW_KWARGS
         return print_borderless_calibration_pages_entrypoint(
             self,
             printer_name,
@@ -2560,8 +2550,8 @@ class MainWindow(QMainWindow):
             media_type_value,
             print_quality_value,
             scale_values,
-            print_borderless_calibration_pages_flow=print_borderless_calibration_pages_flow,
-            print_borderless_calibration_flow_kwargs=PRINT_BORDERLESS_CALIBRATION_FLOW_KWARGS,
+            print_borderless_calibration_pages_flow=calibration_flow,
+            print_borderless_calibration_flow_kwargs=calibration_kwargs,
         )
 
     def print_all_via_cups(

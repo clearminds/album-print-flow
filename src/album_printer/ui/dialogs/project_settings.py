@@ -69,7 +69,10 @@ def open_project_settings_dialog(
             {
                 "properties": {
                     "geocoding": {
-                        "label": "1, Løvenbergvegen, Mogreina, Ullensaker, Akershus, 2054, Norway",
+                        "label": (
+                            "1, Løvenbergvegen, Mogreina, "
+                            "Ullensaker, Akershus, 2054, Norway"
+                        ),
                         "housenumber": "1",
                         "street": "Løvenbergvegen",
                         "postcode": "2054",
@@ -300,7 +303,7 @@ def open_project_settings_dialog(
                 if isinstance(payload_cached, str) and payload_cached.strip():
                     try:
                         parsed_payload = json.loads(payload_cached)
-                        if isinstance(parsed_payload, (dict, list)):
+                        if isinstance(parsed_payload, dict | list):
                             resolved_payload = parsed_payload
                             resolved_payload_source = (
                                 f"Preview image data ({preview_source_path.name})"
@@ -1114,7 +1117,8 @@ def open_project_settings_dialog(
             window,
             "Clear image settings",
             "Clear all per-image settings for this folder?\n"
-            "This removes crop/brightness/date/location-stamp overrides for all photos.",
+            "This removes crop/brightness/date/location-stamp overrides "
+            "for all photos.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )

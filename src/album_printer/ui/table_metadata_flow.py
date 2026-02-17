@@ -128,14 +128,15 @@ def process_table_metadata_batch(
     if not window.table_metadata_pending_paths:
         window.table_metadata_timer.stop()
         if window.table_metadata_total_paths > 0:
+            total_paths = window.table_metadata_total_paths
             window.update_footer_progress(
                 "Metadata",
-                window.table_metadata_total_paths,
-                window.table_metadata_total_paths,
+                total_paths,
+                total_paths,
             )
             present_status(
                 window,
-                f"Metadata indexing complete ({window.table_metadata_total_paths}/{window.table_metadata_total_paths})",
+                f"Metadata indexing complete ({total_paths}/{total_paths})",
                 1500,
             )
             window.append_log(
@@ -220,15 +221,16 @@ def process_table_metadata_batch(
         window.save_folder_metadata()
 
     if not window.table_metadata_pending_paths:
+        total_paths = window.table_metadata_total_paths
         window.table_metadata_timer.stop()
         window.update_footer_progress(
             "Metadata",
-            window.table_metadata_total_paths,
-            window.table_metadata_total_paths,
+            total_paths,
+            total_paths,
         )
         present_status(
             window,
-            f"Metadata indexing complete ({window.table_metadata_total_paths}/{window.table_metadata_total_paths})",
+            f"Metadata indexing complete ({total_paths}/{total_paths})",
             1500,
         )
         window.append_log(

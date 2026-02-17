@@ -18,7 +18,10 @@ def maybe_update_album_sync_status_from_log(
         return False
 
     match = re.search(
-        r"GOOGLE_ALBUM_URL\s+sync progress\s+item=(\d+)/(\d+)\s+new=(\d+)\s+failed=(\d+)",
+        (
+            r"GOOGLE_ALBUM_URL\s+sync progress\s+item=(\d+)/(\d+)"
+            r"\s+new=(\d+)\s+failed=(\d+)"
+        ),
         message,
     )
     if not match:

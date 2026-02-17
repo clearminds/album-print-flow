@@ -11,7 +11,7 @@ def load_custom_location_text_history(window: Any) -> None:
     raw_values = window.ui_settings.value("ui/location_custom_text_history", [])
     if isinstance(raw_values, str):
         candidates = [raw_values]
-    elif isinstance(raw_values, (list, tuple)):
+    elif isinstance(raw_values, list | tuple):
         candidates = [str(value) for value in raw_values]
     else:
         candidates = []
