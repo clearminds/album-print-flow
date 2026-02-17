@@ -980,6 +980,17 @@ def open_project_settings_dialog(
     location_template_layout.addWidget(location_template_editor_button)
     clear_image_settings_btn = QPushButton("Clear All Image Settings", dialog)
 
+    def update_adaptive_control_states() -> None:
+        timestamp_manual_controls_enabled = not stamp_adaptive_text_checkbox.isChecked()
+        stamp_color_row.setEnabled(timestamp_manual_controls_enabled)
+        stamp_border_color_row.setEnabled(timestamp_manual_controls_enabled)
+
+        location_manual_controls_enabled = (
+            not location_stamp_adaptive_text_checkbox.isChecked()
+        )
+        location_stamp_color_row.setEnabled(location_manual_controls_enabled)
+        location_stamp_border_color_row.setEnabled(location_manual_controls_enabled)
+
     crop_ratio_combo.currentIndexChanged.connect(
         lambda _value: apply_dialog_preview_values()
     )
@@ -1042,6 +1053,12 @@ def open_project_settings_dialog(
     )
     stamp_adaptive_text_checkbox.toggled.connect(
         lambda _checked: apply_dialog_preview_values()
+    )
+    stamp_adaptive_text_checkbox.toggled.connect(
+        lambda _checked: update_adaptive_control_states()
+    )
+    location_stamp_adaptive_text_checkbox.toggled.connect(
+        lambda _checked: update_adaptive_control_states()
     )
 
     original_pick_stamp_color = pick_stamp_color
@@ -1190,6 +1207,7 @@ def open_project_settings_dialog(
     form.addRow("Location Border", location_stamp_border_color_row)
     form.addRow(section_label("Folder Actions"), QLabel("", dialog))
     form.addRow("", clear_image_settings_btn)
+    update_adaptive_control_states()
     update_dialog_gps_status()
     update_settings_stamp_preview()
 
