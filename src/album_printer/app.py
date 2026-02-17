@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
-
-from PIL import ExifTags, Image, ImageFont
 
 try:
     import pillow_heif
@@ -14,24 +11,23 @@ try:
 except Exception:
     pillow_heif = None
 
-try:
-    import rawpy
-except Exception:
-    rawpy = None
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QAction, QPixmap
-from PySide6.QtWidgets import QComboBox, QMainWindow, QMessageBox, QSplashScreen
+from PySide6.QtWidgets import QComboBox, QMainWindow, QMessageBox
 
-from album_printer.app_branding import app_about_text as app_about_text_impl
-from album_printer.app_branding import app_branding_info as app_branding_info_impl
-from album_printer.app_branding import app_runtime_line as app_runtime_line_impl
-from album_printer.app_branding import app_version as app_version_impl
-from album_printer.app_branding import app_window_icon
-from album_printer.app_branding import create_splash_screen as create_splash_screen_impl
-from album_printer.app_branding import is_debugger_attached as is_debugger_attached_impl
-from album_printer.app_branding import load_clearminds_head_pixmap, load_logo_pixmap
+from album_printer.app_branding import (
+    app_window_icon,
+    load_clearminds_head_pixmap,
+    load_logo_pixmap,
+)
+from album_printer.app_image_entrypoints import (
+    datetime_for_image,
+    exif_datetime_for_image,
+    exif_location_for_image,
+    load_image_as_rgb,
+    original_metadata_path_for_image,
+)
 from album_printer.app_primitives import (
-    _dms_to_decimal,
     _normalized_geocodejson_feature,
     _normalized_geocodejson_geocoding,
     apply_manual_rotation,
@@ -58,32 +54,20 @@ from album_printer.app_printing_entrypoints import (
     query_cups_job_status_text,
     resolve_cups_media_value,
 )
-from album_printer.image_io_helpers import datetime_for_image as datetime_for_image_impl
-from album_printer.image_io_helpers import (
-    exif_datetime_for_image as exif_datetime_for_image_impl,
+from album_printer.app_rendering_entrypoints import (
+    DEFAULT_STAMP_BORDER_COLOR,
+    DEFAULT_STAMP_COLOR,
+    STAMP_FONTS,
+    apply_stamp,
+    render_image,
+    render_preview_image,
 )
-from album_printer.image_io_helpers import (
-    exif_location_for_image as exif_location_for_image_impl,
-)
-from album_printer.image_io_helpers import (
-    extract_exif_datetime as extract_exif_datetime_impl,
-)
-from album_printer.image_io_helpers import (
-    extract_exif_location as extract_exif_location_impl,
-)
-from album_printer.image_io_helpers import (
-    extract_metadata_for_image_path as extract_metadata_for_image_path_impl,
-)
-from album_printer.image_io_helpers import (
-    extract_metadata_from_open_image as extract_metadata_from_open_image_impl,
-)
-from album_printer.image_io_helpers import load_image_as_rgb as load_image_as_rgb_impl
-from album_printer.image_io_helpers import (
-    original_metadata_path_for_image as original_metadata_path_for_image_impl,
-)
-from album_printer.image_io_helpers import path_cache_key as path_cache_key_impl
-from album_printer.image_io_helpers import (
-    store_image_metadata_cache as store_image_metadata_cache_impl,
+from album_printer.app_runtime_entrypoints import (
+    APP_DISPLAY_NAME,
+    app_about_text,
+    app_version,
+    create_splash_screen,
+    is_debugger_attached,
 )
 from album_printer.ipp_backend import (
     IppBackendError,
@@ -210,16 +194,6 @@ from album_printer.printing.main_window_queue_entrypoints import (
     resume_print_queue as resume_print_queue_entrypoint,
 )
 from album_printer.processing_settings import ProcessingSettings
-from album_printer.rendering_helpers import apply_stamp as apply_stamp_impl
-from album_printer.rendering_helpers import load_stamp_font as load_stamp_font_impl
-from album_printer.rendering_helpers import (
-    location_stamp_text as location_stamp_text_impl,
-)
-from album_printer.rendering_helpers import render_image as render_image_impl
-from album_printer.rendering_helpers import (
-    render_preview_image as render_preview_image_impl,
-)
-from album_printer.rendering_helpers import stamp_text as stamp_text_impl
 from album_printer.settings_store import (
     load_app_project_settings as load_project_settings_from_store,
 )
@@ -748,7 +722,6 @@ from album_printer.ui.window_event_flow import resize_event as resize_event_flow
 from album_printer.ui.window_state_flow import restore_ui_state as restore_ui_state_flow
 from album_printer.ui.window_state_flow import save_ui_state as save_ui_state_flow
 
-APP_DISPLAY_NAME = "Album Print Flow"
 APP_DESKTOP_ID = "se.clearimnds.album-print-flow"
 APP_ORGANIZATION_NAME = "clearimnds"
 APP_ORGANIZATION_DOMAIN = "clearimnds.se"
@@ -806,10 +779,6 @@ SORT_MODES = [
     "File Modified (Oldest first)",
     "File Modified (Newest first)",
 ]
-STAMP_FONTS = {
-    "Photo Stamp Mono": "fonts/PhotoStampMono.ttf",
-    "Classic Mono": "fonts/ClassicMono.ttf",
-}
 
 TABLE_COL_THUMB = 0
 TABLE_COL_STATE = 1
@@ -825,11 +794,6 @@ TABLE_METADATA_BATCH_SIZE = 4
 TABLE_METADATA_BATCH_SIZE_IDLE = 6
 TABLE_METADATA_BATCH_SIZE_SCROLLING = 2
 TABLE_METADATA_SCROLL_WINDOW_SECONDS = 0.35
-HEIC_SIDECAR_SUFFIXES = (".heic", ".heif")
-HEIC_JPEG_SIDECAR_SUFFIX = ".jpg"
-HEIC_SIDECAR_JPEG_QUALITY = 95
-IMAGE_RGB_CACHE_MAX_ITEMS = 16
-IMAGE_METADATA_CACHE_MAX_ITEMS = 128
 REFRAME_HANDLE_SIZE = 14
 STAMP_SCALE_MIN_PERCENT = 20
 STAMP_SCALE_MAX_PERCENT = 180
@@ -837,12 +801,7 @@ STAMP_OFFSET_MIN_PX = 0
 STAMP_OFFSET_MAX_PX = 240
 SETTINGS_ORG = "album-print-flow"
 SETTINGS_APP = "AlbumPrintFlow"
-DEFAULT_STAMP_COLOR = "#FF9100"
-DEFAULT_STAMP_BORDER_COLOR = "#000000"
 PRINT_BACKENDS = ["Auto", "CUPS", "Qt", "IPP"]
-APP_DISPLAY_NAME = "Album Print Flow"
-APP_COPYRIGHT = "© clearminds, 2026"
-APP_TAGLINE = "Photo crop, stamp, and print workflow"
 NOMINATIM_DEFAULT_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
 NOMINATIM_DEFAULT_RATE_LIMIT_SECONDS = 1.0
 NOMINATIM_CACHE_FILENAME = "nominatim_reverse_cache.json"
@@ -893,261 +852,6 @@ PER_IMAGE_LOCATION_STAMP_OVERRIDES = [
     "Custom Text",
     *LOCATION_FORMAT_OPTIONS,
 ]
-
-_image_rgb_cache: OrderedDict[tuple[str, int, int], Image.Image] = OrderedDict()
-_image_metadata_cache: OrderedDict[
-    tuple[str, int, int],
-    tuple[datetime | None, tuple[float, float] | None],
-] = OrderedDict()
-
-DATETIME_ORIGINAL_TAG = next(
-    tag for tag, name in ExifTags.TAGS.items() if name == "DateTimeOriginal"
-)
-DATETIME_DIGITIZED_TAG = next(
-    tag for tag, name in ExifTags.TAGS.items() if name == "DateTimeDigitized"
-)
-DATETIME_TAG = next(tag for tag, name in ExifTags.TAGS.items() if name == "DateTime")
-GPSINFO_TAG = next(
-    (tag for tag, name in ExifTags.TAGS.items() if name == "GPSInfo"),
-    None,
-)
-
-
-def _path_cache_key(path: Path) -> tuple[str, int, int] | None:
-    return path_cache_key_impl(path)
-
-
-def _extract_exif_datetime(exif: object) -> datetime | None:
-    return extract_exif_datetime_impl(
-        exif,
-        datetime_original_tag=DATETIME_ORIGINAL_TAG,
-        datetime_digitized_tag=DATETIME_DIGITIZED_TAG,
-        datetime_tag=DATETIME_TAG,
-    )
-
-
-def _extract_exif_location(exif: object) -> tuple[float, float] | None:
-    return extract_exif_location_impl(
-        exif,
-        gpsinfo_tag=GPSINFO_TAG,
-        dms_to_decimal_fn=_dms_to_decimal,
-    )
-
-
-def _extract_metadata_from_open_image(
-    image: Image.Image,
-) -> tuple[datetime | None, tuple[float, float] | None]:
-    return extract_metadata_from_open_image_impl(
-        image,
-        extract_exif_datetime_fn=_extract_exif_datetime,
-        extract_exif_location_fn=_extract_exif_location,
-    )
-
-
-def _store_image_metadata_cache(
-    path: Path,
-    captured_at: datetime | None,
-    location: tuple[float, float] | None,
-) -> None:
-    store_image_metadata_cache_impl(
-        path,
-        captured_at,
-        location,
-        path_cache_key_fn=_path_cache_key,
-        image_metadata_cache=_image_metadata_cache,
-        image_metadata_cache_max_items=IMAGE_METADATA_CACHE_MAX_ITEMS,
-    )
-
-
-def _extract_metadata_for_image_path(
-    path: Path,
-) -> tuple[datetime | None, tuple[float, float] | None]:
-    return extract_metadata_for_image_path_impl(
-        path,
-        path_cache_key_fn=_path_cache_key,
-        image_metadata_cache=_image_metadata_cache,
-        extract_metadata_from_open_image_fn=_extract_metadata_from_open_image,
-        store_image_metadata_cache_fn=_store_image_metadata_cache,
-    )
-
-
-def datetime_for_image(path: Path) -> datetime:
-    return datetime_for_image_impl(
-        path,
-        original_metadata_path_for_image_fn=original_metadata_path_for_image,
-        extract_metadata_for_image_path_fn=_extract_metadata_for_image_path,
-        parse_datetime_from_filename_fn=parse_datetime_from_filename,
-    )
-
-
-def exif_datetime_for_image(path: Path) -> datetime | None:
-    return exif_datetime_for_image_impl(
-        path,
-        original_metadata_path_for_image_fn=original_metadata_path_for_image,
-        extract_metadata_for_image_path_fn=_extract_metadata_for_image_path,
-    )
-
-
-def load_image_as_rgb(
-    path: Path,
-    debug_logger: Callable[[str], None] | None = None,
-) -> Image.Image:
-    return load_image_as_rgb_impl(
-        path,
-        path_cache_key_fn=_path_cache_key,
-        image_rgb_cache=_image_rgb_cache,
-        image_rgb_cache_max_items=IMAGE_RGB_CACHE_MAX_ITEMS,
-        heic_sidecar_suffixes=HEIC_SIDECAR_SUFFIXES,
-        heic_jpeg_sidecar_suffix=HEIC_JPEG_SIDECAR_SUFFIX,
-        extract_metadata_from_open_image_fn=_extract_metadata_from_open_image,
-        store_image_metadata_cache_fn=_store_image_metadata_cache,
-        extract_metadata_for_image_path_fn=_extract_metadata_for_image_path,
-        original_metadata_path_for_image_fn=original_metadata_path_for_image,
-        heic_sidecar_jpeg_quality=HEIC_SIDECAR_JPEG_QUALITY,
-        rawpy_module=rawpy,
-        raw_extensions=RAW_EXTENSIONS,
-        debug_logger=debug_logger,
-    )
-
-
-def exif_location_for_image(path: Path) -> tuple[float, float] | None:
-    return exif_location_for_image_impl(
-        path,
-        original_metadata_path_for_image_fn=original_metadata_path_for_image,
-        extract_metadata_for_image_path_fn=_extract_metadata_for_image_path,
-    )
-
-
-def original_metadata_path_for_image(path: Path) -> Path:
-    return original_metadata_path_for_image_impl(path)
-
-
-def stamp_text(path: Path, settings: ProcessingSettings) -> str:
-    return stamp_text_impl(
-        path,
-        settings,
-        datetime_for_image_fn=datetime_for_image,
-    )
-
-
-def location_stamp_text(settings: ProcessingSettings) -> str:
-    return location_stamp_text_impl(settings)
-
-
-def load_stamp_font(
-    font_name: str, font_size: int
-) -> ImageFont.ImageFont | ImageFont.FreeTypeFont:
-    return load_stamp_font_impl(
-        font_name,
-        font_size,
-        base_path=Path(__file__).resolve().parent,
-        stamp_fonts=STAMP_FONTS,
-    )
-
-
-def apply_stamp(
-    image: Image.Image,
-    text: str,
-    settings: ProcessingSettings,
-    *,
-    corner: str | None = None,
-    scale_percent: int | None = None,
-    offset_x_px: int | None = None,
-    offset_y_px: int | None = None,
-    color_value: str | None = None,
-    border_color_value: str | None = None,
-    vertical: bool | None = None,
-) -> Image.Image:
-    return apply_stamp_impl(
-        image,
-        text,
-        settings,
-        load_stamp_font_fn=load_stamp_font,
-        default_stamp_color=DEFAULT_STAMP_COLOR,
-        default_stamp_border_color=DEFAULT_STAMP_BORDER_COLOR,
-        corner=corner,
-        scale_percent=scale_percent,
-        offset_x_px=offset_x_px,
-        offset_y_px=offset_y_px,
-        color_value=color_value,
-        border_color_value=border_color_value,
-        vertical=vertical,
-    )
-
-
-def render_image(
-    path: Path,
-    settings: ProcessingSettings,
-    debug_logger: Callable[[str], None] | None = None,
-) -> Image.Image:
-    return render_image_impl(
-        path,
-        settings,
-        load_image_as_rgb_fn=load_image_as_rgb,
-        apply_manual_rotation_fn=apply_manual_rotation,
-        center_crop_to_ratio_fn=center_crop_to_ratio,
-        stamp_text_fn=stamp_text,
-        location_stamp_text_fn=location_stamp_text,
-        apply_stamp_fn=apply_stamp,
-        debug_logger=debug_logger,
-    )
-
-
-def render_preview_image(
-    path: Path,
-    settings: ProcessingSettings,
-    max_dimension: int,
-    debug_logger: Callable[[str], None] | None = None,
-) -> Image.Image:
-    return render_preview_image_impl(
-        path,
-        settings,
-        max_dimension,
-        load_image_as_rgb_fn=load_image_as_rgb,
-        apply_manual_rotation_fn=apply_manual_rotation,
-        center_crop_to_ratio_fn=center_crop_to_ratio,
-        stamp_text_fn=stamp_text,
-        location_stamp_text_fn=location_stamp_text,
-        apply_stamp_fn=apply_stamp,
-        debug_logger=debug_logger,
-    )
-
-
-def is_debugger_attached() -> bool:
-    return is_debugger_attached_impl()
-
-
-def app_version() -> str:
-    return app_version_impl()
-
-
-def app_runtime_line() -> str:
-    return app_runtime_line_impl()
-
-
-def app_branding_info() -> dict[str, str]:
-    return app_branding_info_impl(
-        app_display_name=APP_DISPLAY_NAME,
-        app_tagline=APP_TAGLINE,
-        app_copyright=APP_COPYRIGHT,
-    )
-
-
-def app_about_text() -> str:
-    return app_about_text_impl(
-        app_display_name=APP_DISPLAY_NAME,
-        app_tagline=APP_TAGLINE,
-        app_copyright=APP_COPYRIGHT,
-    )
-
-
-def create_splash_screen() -> QSplashScreen:
-    return create_splash_screen_impl(
-        app_display_name=APP_DISPLAY_NAME,
-        app_tagline=APP_TAGLINE,
-        app_copyright=APP_COPYRIGHT,
-        base_file=Path(__file__),
-    )
 
 
 OPEN_SETTINGS_DIALOG_FLOW_KWARGS = {

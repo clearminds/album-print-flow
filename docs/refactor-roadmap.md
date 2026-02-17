@@ -4,6 +4,25 @@ This project still has a large controller in src/album_printer/app.py. The ongoi
 
 ## What was just extracted
 
+- Runtime/branding wrapper block extracted from `app.py` into:
+   - src/album_printer/app_runtime_entrypoints.py
+- Moved delegates for app version/about/runtime/splash/debugger checks and
+   centralized app branding constants there.
+- `app.py` now imports runtime entrypoints directly instead of hosting those
+   wrapper functions.
+
+- Top-level rendering/stamp wrapper block extracted from `app.py` into:
+   - src/album_printer/app_rendering_entrypoints.py
+- Moved rendering delegates for stamp text/font application and image render/
+   preview render orchestration, and centralized stamp defaults/fonts there.
+- `app.py` now imports rendering entrypoints/constants instead of hosting those
+   wrappers directly.
+
+- Top-level image IO/exif wrapper block extracted from `app.py` into:
+   - src/album_printer/app_image_entrypoints.py
+- Moved wrapper delegates for datetime/EXIF/location lookup and RGB image load
+   cache orchestration, with `app.py` now importing these entrypoints directly.
+
 - Top-level printing utility wrapper block extracted from `app.py` into:
    - src/album_printer/app_printing_entrypoints.py
 - Moved CUPS/media label maps and printing helper delegates for:
