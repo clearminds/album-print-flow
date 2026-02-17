@@ -34,6 +34,7 @@ class ProcessingSettings:
     location_stamp_color: str = "#FF9100"
     location_stamp_border_color: str = "#000000"
     location_stamp_vertical: bool = False
+    location_stamp_adaptive_text: bool = False
 
 
 __all__ = ["ProcessingSettings"]

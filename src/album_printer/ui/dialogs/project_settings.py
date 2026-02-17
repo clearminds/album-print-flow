@@ -136,6 +136,7 @@ def open_project_settings_dialog(
         "location_stamp_offset_x_px": window.location_stamp_offset_x_px,
         "location_stamp_offset_y_px": window.location_stamp_offset_y_px,
         "location_stamp_vertical_value": window.location_stamp_vertical_value,
+        "location_stamp_adaptive_text_value": window.location_stamp_adaptive_text_value,
         "location_stamp_color_value": window.location_stamp_color_value,
         "location_stamp_border_color_value": window.location_stamp_border_color_value,
     }
@@ -679,6 +680,10 @@ def open_project_settings_dialog(
 
     location_stamp_vertical_checkbox = QCheckBox("Vertical stamp", dialog)
     location_stamp_vertical_checkbox.setChecked(window.location_stamp_vertical_value)
+    location_stamp_adaptive_text_checkbox = QCheckBox("Adaptive Text", dialog)
+    location_stamp_adaptive_text_checkbox.setChecked(
+        window.location_stamp_adaptive_text_value
+    )
 
     location_stamp_color_button = QPushButton(dialog)
     location_stamp_color_reset_button = QPushButton("Reset", dialog)
@@ -773,6 +778,9 @@ def open_project_settings_dialog(
         window.location_stamp_offset_y_px = location_stamp_offset_y_slider.value()
         window.location_stamp_vertical_value = (
             location_stamp_vertical_checkbox.isChecked()
+        )
+        window.location_stamp_adaptive_text_value = (
+            location_stamp_adaptive_text_checkbox.isChecked()
         )
         window.location_stamp_color_value = location_stamp_color_value
         window.location_stamp_border_color_value = location_stamp_border_color_value
@@ -903,6 +911,7 @@ def open_project_settings_dialog(
             color_value=location_stamp_color_value,
             border_color_value=location_stamp_border_color_value,
             vertical=location_stamp_vertical_checkbox.isChecked(),
+            adaptive_text=location_stamp_adaptive_text_checkbox.isChecked(),
         )
 
         pixmap = QPixmap.fromImage(QImage(ImageQt(image)))
@@ -1011,6 +1020,9 @@ def open_project_settings_dialog(
         lambda _value: apply_dialog_preview_values()
     )
     location_stamp_vertical_checkbox.toggled.connect(
+        lambda _checked: apply_dialog_preview_values()
+    )
+    location_stamp_adaptive_text_checkbox.toggled.connect(
         lambda _checked: apply_dialog_preview_values()
     )
     stamp_font_combo.currentIndexChanged.connect(
@@ -1173,6 +1185,7 @@ def open_project_settings_dialog(
     form.addRow("Location Offset X", location_stamp_offset_x_row)
     form.addRow("Location Offset Y", location_stamp_offset_y_row)
     form.addRow("Location Text Direction", location_stamp_vertical_checkbox)
+    form.addRow("Location Adaptive Text", location_stamp_adaptive_text_checkbox)
     form.addRow("Location Color", location_stamp_color_row)
     form.addRow("Location Border", location_stamp_border_color_row)
     form.addRow(section_label("Folder Actions"), QLabel("", dialog))
@@ -1219,6 +1232,9 @@ def open_project_settings_dialog(
         window.location_stamp_vertical_value = bool(
             original_values["location_stamp_vertical_value"]
         )
+        window.location_stamp_adaptive_text_value = bool(
+            original_values["location_stamp_adaptive_text_value"]
+        )
         window.location_stamp_color_value = str(
             original_values["location_stamp_color_value"]
         )
@@ -1258,6 +1274,9 @@ def open_project_settings_dialog(
     window.location_stamp_offset_x_px = location_stamp_offset_x_slider.value()
     window.location_stamp_offset_y_px = location_stamp_offset_y_slider.value()
     window.location_stamp_vertical_value = location_stamp_vertical_checkbox.isChecked()
+    window.location_stamp_adaptive_text_value = (
+        location_stamp_adaptive_text_checkbox.isChecked()
+    )
     window.location_stamp_color_value = location_stamp_color_value
     window.location_stamp_border_color_value = location_stamp_border_color_value
     window.stamp_font_value = stamp_font_combo.currentText()

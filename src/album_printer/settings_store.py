@@ -49,6 +49,7 @@ PROJECT_SETTING_KEYS = [
     "location_stamp_color",
     "location_stamp_border_color",
     "location_stamp_vertical",
+    "location_stamp_adaptive_text",
 ]
 
 
@@ -289,6 +290,13 @@ def load_app_project_settings(
             values["location_stamp_vertical"],
         ),
         bool(values["location_stamp_vertical"]),
+    )
+    values["location_stamp_adaptive_text"] = _as_bool(
+        settings.value(
+            "settings/location_stamp_adaptive_text",
+            values["location_stamp_adaptive_text"],
+        ),
+        bool(values["location_stamp_adaptive_text"]),
     )
 
     return values

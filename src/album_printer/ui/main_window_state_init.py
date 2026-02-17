@@ -187,6 +187,7 @@ def initialize_main_window_state(
     window.location_stamp_color_value = default_stamp_color
     window.location_stamp_border_color_value = default_stamp_border_color
     window.location_stamp_vertical_value = False
+    window.location_stamp_adaptive_text_value = False
     window.location_custom_text_history = []
     window.print_backend_value = "Auto"
     window.ipp_uri_value = ""

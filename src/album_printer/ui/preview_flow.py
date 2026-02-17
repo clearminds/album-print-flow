@@ -157,6 +157,7 @@ def processing_settings_for_path(
         location_stamp_color=window.location_stamp_color_value,
         location_stamp_border_color=window.location_stamp_border_color_value,
         location_stamp_vertical=window.location_stamp_vertical_value,
+        location_stamp_adaptive_text=window.location_stamp_adaptive_text_value,
     )
 
 
@@ -225,6 +226,7 @@ def refresh_preview(
         settings.location_stamp_color,
         settings.location_stamp_border_color,
         settings.location_stamp_vertical,
+        settings.location_stamp_adaptive_text,
     )
     if preview_key == window.preview_render_state_key:
         window.update_location_status_for_path(path)

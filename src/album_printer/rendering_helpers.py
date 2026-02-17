@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageStat
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 from PySide6.QtGui import QColor
 
 
@@ -72,6 +72,7 @@ def apply_stamp(
     color_value: str | None = None,
     border_color_value: str | None = None,
     vertical: bool | None = None,
+    adaptive_text: bool | None = None,
 ) -> Image.Image:
     if not text:
         return image
@@ -112,6 +113,14 @@ def apply_stamp(
     font = load_stamp_font_fn(settings.stamp_font, font_size)
 
     stroke_width = max(2, int(font_size * 0.12))
+    adaptive_text_enabled = (
+        adaptive_text
+        if adaptive_text is not None
+        else bool(getattr(settings, "stamp_adaptive_text", False))
+    )
+    if adaptive_text_enabled:
+        stroke_width = 0
+
     left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
     text_width = right - left
     text_height = bottom - top
@@ -145,38 +154,46 @@ def apply_stamp(
     if not border_color.isValid():
         border_color = QColor(default_stamp_border_color)
 
-    adaptive_text_enabled = (
-        bool(getattr(settings, "stamp_adaptive_text", False))
-        and color_value is None
-        and border_color_value is None
-    )
-    if adaptive_text_enabled and stamp_w > 0 and stamp_h > 0:
+    if adaptive_text_enabled:
+        text_mask = Image.new("L", (base_layer_width, base_layer_height), 0)
+        text_draw = ImageDraw.Draw(text_mask)
+        text_draw.text(
+            (-left, -top),
+            text,
+            fill=255,
+            font=font,
+        )
+
+        if stamp_vertical:
+            text_mask = text_mask.rotate(90, expand=True)
+
         sample_region = image.crop((x, y, x + stamp_w, y + stamp_h)).convert("L")
-        mean_luminance = float(ImageStat.Stat(sample_region).mean[0])
-        if mean_luminance >= 128.0:
-            color = QColor("#000000")
-            border_color = QColor("#FFFFFF")
-        else:
-            color = QColor("#FFFFFF")
-            border_color = QColor("#000000")
+        white_mask = sample_region.point(lambda p: 255 if p < 128 else 0)
+        black_rgb = Image.new("RGB", (stamp_w, stamp_h), (0, 0, 0))
+        white_rgb = Image.new("RGB", (stamp_w, stamp_h), (255, 255, 255))
+        text_rgb = Image.composite(white_rgb, black_rgb, white_mask)
+        red_channel, green_channel, blue_channel = text_rgb.split()
+        text_layer = Image.merge(
+            "RGBA", (red_channel, green_channel, blue_channel, text_mask)
+        )
+    else:
+        text_layer = Image.new(
+            "RGBA",
+            (base_layer_width, base_layer_height),
+            (0, 0, 0, 0),
+        )
+        text_draw = ImageDraw.Draw(text_layer)
+        text_draw.text(
+            (stroke_width - left, stroke_width - top),
+            text,
+            fill=(color.red(), color.green(), color.blue()),
+            font=font,
+            stroke_width=stroke_width,
+            stroke_fill=(border_color.red(), border_color.green(), border_color.blue()),
+        )
 
-    text_layer = Image.new(
-        "RGBA",
-        (base_layer_width, base_layer_height),
-        (0, 0, 0, 0),
-    )
-    text_draw = ImageDraw.Draw(text_layer)
-    text_draw.text(
-        (stroke_width - left, stroke_width - top),
-        text,
-        fill=(color.red(), color.green(), color.blue()),
-        font=font,
-        stroke_width=stroke_width,
-        stroke_fill=(border_color.red(), border_color.green(), border_color.blue()),
-    )
-
-    if stamp_vertical:
-        text_layer = text_layer.rotate(90, expand=True)
+        if stamp_vertical:
+            text_layer = text_layer.rotate(90, expand=True)
 
     image.alpha_composite(text_layer, (x, y))
     return image.convert("RGB")
@@ -218,6 +235,7 @@ def render_image(
         color_value=settings.location_stamp_color,
         border_color_value=settings.location_stamp_border_color,
         vertical=settings.location_stamp_vertical,
+        adaptive_text=settings.location_stamp_adaptive_text,
     )
     return image
 
@@ -269,6 +287,7 @@ def render_preview_image(
         color_value=settings.location_stamp_color,
         border_color_value=settings.location_stamp_border_color,
         vertical=settings.location_stamp_vertical,
+        adaptive_text=settings.location_stamp_adaptive_text,
     )
     return image
 

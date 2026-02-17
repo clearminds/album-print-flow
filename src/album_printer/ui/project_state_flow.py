@@ -32,6 +32,7 @@ def current_project_settings_payload(window: Any) -> dict[str, object]:
         "location_stamp_color": window.location_stamp_color_value,
         "location_stamp_border_color": window.location_stamp_border_color_value,
         "location_stamp_vertical": window.location_stamp_vertical_value,
+        "location_stamp_adaptive_text": window.location_stamp_adaptive_text_value,
     }
 
 
@@ -79,6 +80,7 @@ def load_app_project_settings(
         "location_stamp_color": window.location_stamp_color_value,
         "location_stamp_border_color": window.location_stamp_border_color_value,
         "location_stamp_vertical": window.location_stamp_vertical_value,
+        "location_stamp_adaptive_text": window.location_stamp_adaptive_text_value,
     }
     values = load_project_settings_from_store_fn(
         window.ui_settings,
@@ -122,6 +124,9 @@ def load_app_project_settings(
         values["location_stamp_border_color"]
     )
     window.location_stamp_vertical_value = bool(values["location_stamp_vertical"])
+    window.location_stamp_adaptive_text_value = bool(
+        values["location_stamp_adaptive_text"]
+    )
 
 
 def save_app_project_settings(
@@ -159,6 +164,7 @@ def save_app_project_settings(
             "location_stamp_color": window.location_stamp_color_value,
             "location_stamp_border_color": window.location_stamp_border_color_value,
             "location_stamp_vertical": window.location_stamp_vertical_value,
+            "location_stamp_adaptive_text": window.location_stamp_adaptive_text_value,
         },
     )
 

@@ -62,6 +62,7 @@ def apply_stamp(
     color_value: str | None = None,
     border_color_value: str | None = None,
     vertical: bool | None = None,
+    adaptive_text: bool | None = None,
 ) -> Image.Image:
     return apply_stamp_impl(
         image,
@@ -77,6 +78,7 @@ def apply_stamp(
         color_value=color_value,
         border_color_value=border_color_value,
         vertical=vertical,
+        adaptive_text=adaptive_text,
     )
 
 
