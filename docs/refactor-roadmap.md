@@ -4,6 +4,22 @@ This project still has a large controller in src/album_printer/app.py. The ongoi
 
 ## What was just extracted
 
+- Top-level printing utility wrapper block extracted from `app.py` into:
+   - src/album_printer/app_printing_entrypoints.py
+- Moved CUPS/media label maps and printing helper delegates for:
+   - option labels/media resolution
+   - CUPS options/request parsing and job status lookup
+   - borderless calibration image/content-scale helpers
+- `app.py` now imports those helpers directly from `app_printing_entrypoints`.
+
+- MainWindow queue action entrypoints extracted from `app.py` into:
+   - src/album_printer/printing/main_window_queue_entrypoints.py
+- `app.py` queue methods now delegate through queue entrypoints for:
+   - queue table refresh, target resolution, enqueue/process/pause/resume,
+      remove/cancel selected queue item, and clearing finished queue items.
+- `app.py` no longer directly imports queue action and queue management flow
+   wrappers for those MainWindow queue methods.
+
 - Second-wave compat indirection removal completed after canonical rewiring:
    - removed `printing/flows/compat/*` shim hub
    - removed `sources/flows/compat/*` shim hub

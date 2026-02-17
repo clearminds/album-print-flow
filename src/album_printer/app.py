@@ -46,6 +46,18 @@ from album_printer.app_primitives import (
     ratios_match_either_orientation,
     render_location_template,
 )
+from album_printer.app_printing_entrypoints import (
+    CUPS_KEYS,
+    apply_borderless_content_scale,
+    create_borderless_calibration_image,
+    is_explicit_borderless_media,
+    media_size_mm_from_value,
+    parse_cups_options_output,
+    parse_cups_request_id,
+    pretty_option_label,
+    query_cups_job_status_text,
+    resolve_cups_media_value,
+)
 from album_printer.image_io_helpers import datetime_for_image as datetime_for_image_impl
 from album_printer.image_io_helpers import (
     exif_datetime_for_image as exif_datetime_for_image_impl,
@@ -76,7 +88,6 @@ from album_printer.image_io_helpers import (
 from album_printer.ipp_backend import (
     IppBackendError,
     IppCapabilities,
-    cancel_ipp_job,
     get_ipp_capabilities,
     print_jobs_via_ipp,
 )
@@ -120,9 +131,6 @@ from album_printer.printing.flows.history import (
     update_selected_print_info as update_selected_print_info_flow,
 )
 from album_printer.printing.flows.orchestrator import (
-    cancel_selected_queue_item as cancel_selected_queue_item_flow,
-)
-from album_printer.printing.flows.orchestrator import (
     print_all_via_cups as print_all_via_cups_flow,
 )
 from album_printer.printing.flows.orchestrator import (
@@ -131,61 +139,7 @@ from album_printer.printing.flows.orchestrator import (
 from album_printer.printing.flows.orchestrator import (
     print_all_via_qt as print_all_via_qt_flow,
 )
-from album_printer.printing.flows.orchestrator import (
-    process_print_queue as process_print_queue_flow,
-)
 from album_printer.printing.flows.paper import paper_size_mm as paper_size_mm_flow
-from album_printer.printing.flows.queue_actions import (
-    cancel_selected_queue_item as cancel_selected_queue_item_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    clear_finished_queue_items as clear_finished_queue_items_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    current_ipp_target_name as current_ipp_target_name_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    current_queue_target as current_queue_target_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    enqueue_print_paths as enqueue_print_paths_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    pause_print_queue as pause_print_queue_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    process_print_queue as process_print_queue_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    refresh_print_queue_table as refresh_print_queue_table_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    remove_selected_queue_item as remove_selected_queue_item_actions_flow,
-)
-from album_printer.printing.flows.queue_actions import (
-    resume_print_queue as resume_print_queue_actions_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    clear_finished_queue_items as clear_finished_queue_items_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    current_ipp_target_name as current_ipp_target_name_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    current_queue_target as current_queue_target_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    enqueue_print_paths as enqueue_print_paths_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    pause_print_queue as pause_print_queue_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    remove_selected_queue_item as remove_selected_queue_item_flow,
-)
-from album_printer.printing.flows.queue_management import (
-    resume_print_queue as resume_print_queue_flow,
-)
 from album_printer.printing.flows.selection import print_all as print_all_flow
 from album_printer.printing.flows.selection import print_paths as print_paths_flow
 from album_printer.printing.flows.selection import print_selected as print_selected_flow
@@ -225,33 +179,35 @@ from album_printer.printing.main_window_print_entrypoints import (
 from album_printer.printing.main_window_print_entrypoints import (
     record_print_history as record_print_history_entrypoint,
 )
-from album_printer.printing_helpers import (
-    apply_borderless_content_scale as apply_borderless_content_scale_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    cancel_selected_queue_item as cancel_selected_queue_item_entrypoint,
 )
-from album_printer.printing_helpers import (
-    create_borderless_calibration_image as create_borderless_calibration_image_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    clear_finished_queue_items as clear_finished_queue_items_entrypoint,
 )
-from album_printer.printing_helpers import (
-    is_explicit_borderless_media as is_explicit_borderless_media_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    current_ipp_target_name as current_ipp_target_name_entrypoint,
 )
-from album_printer.printing_helpers import (
-    media_size_mm_from_value as media_size_mm_from_value_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    current_queue_target as current_queue_target_entrypoint,
 )
-from album_printer.printing_helpers import (
-    parse_cups_options_output as parse_cups_options_output_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    enqueue_print_paths as enqueue_print_paths_entrypoint,
 )
-from album_printer.printing_helpers import (
-    parse_cups_request_id as parse_cups_request_id_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    pause_print_queue as pause_print_queue_entrypoint,
 )
-from album_printer.printing_helpers import parse_ipp_job_id as parse_ipp_job_id_impl
-from album_printer.printing_helpers import (
-    pretty_option_label as pretty_option_label_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    process_print_queue as process_print_queue_entrypoint,
 )
-from album_printer.printing_helpers import (
-    query_cups_job_status_text as query_cups_job_status_text_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    refresh_print_queue_table as refresh_print_queue_table_entrypoint,
 )
-from album_printer.printing_helpers import (
-    resolve_cups_media_value as resolve_cups_media_value_impl,
+from album_printer.printing.main_window_queue_entrypoints import (
+    remove_selected_queue_item as remove_selected_queue_item_entrypoint,
+)
+from album_printer.printing.main_window_queue_entrypoints import (
+    resume_print_queue as resume_print_queue_entrypoint,
 )
 from album_printer.processing_settings import ProcessingSettings
 from album_printer.rendering_helpers import apply_stamp as apply_stamp_impl
@@ -712,9 +668,6 @@ from album_printer.ui.preview_flow import (
     processing_settings_for_path as processing_settings_for_path_flow,
 )
 from album_printer.ui.preview_flow import refresh_preview as refresh_preview_flow
-from album_printer.ui.print_queue_presenter import (
-    refresh_print_queue_table as refresh_print_queue_table_presenter,
-)
 from album_printer.ui.project_state_flow import (
     borderless_enabled as borderless_enabled_flow,
 )
@@ -857,18 +810,6 @@ STAMP_FONTS = {
     "Photo Stamp Mono": "fonts/PhotoStampMono.ttf",
     "Classic Mono": "fonts/ClassicMono.ttf",
 }
-CUPS_KEYS = ["media", "media-type", "print-quality"]
-CUPS_ALIASES = {
-    "media": ["media", "pagesize", "page-size", "page_size"],
-    "media-type": ["media-type", "mediatype", "media_type"],
-    "print-quality": [
-        "print-quality",
-        "printquality",
-        "quality",
-        "cupsprintquality",
-        "resolution",
-    ],
-}
 
 TABLE_COL_THUMB = 0
 TABLE_COL_STATE = 1
@@ -958,41 +899,6 @@ _image_metadata_cache: OrderedDict[
     tuple[str, int, int],
     tuple[datetime | None, tuple[float, float] | None],
 ] = OrderedDict()
-
-MEDIA_NAME_MAP = {
-    "iso_a3_297x420mm": "A3",
-    "iso_a4_210x297mm": "A4",
-    "iso_a5_148x210mm": "A5",
-    "na_letter_8.5x11in": "US Letter",
-    "na_legal_8.5x14in": "US Legal",
-    "4x6": "4x6 in (10x15 cm)",
-    "5x7": "5x7 in",
-    "8x10": "8x10 in",
-    "10x15cm": "10x15 cm",
-    "13x18cm": "13x18 cm",
-    "a3": "A3",
-    "a4": "A4",
-}
-
-MEDIA_TYPE_MAP = {
-    "stationery": "Plain Paper",
-    "plain": "Plain Paper",
-    "photographicglossy": "Photo Glossy",
-    "photographicsemigloss": "Photo Semi-Gloss",
-    "photographicmatte": "Photo Matte",
-    "matte": "Matte",
-    "glossy": "Glossy",
-    "envelope": "Envelope",
-}
-
-QUALITY_MAP = {
-    "3": "Draft",
-    "4": "Normal",
-    "5": "High",
-    "draft": "Draft",
-    "normal": "Normal",
-    "high": "High",
-}
 
 DATETIME_ORIGINAL_TAG = next(
     tag for tag, name in ExifTags.TAGS.items() if name == "DateTimeOriginal"
@@ -1205,79 +1111,6 @@ def render_preview_image(
         apply_stamp_fn=apply_stamp,
         debug_logger=debug_logger,
     )
-
-
-def pretty_option_label(kind: str, raw_value: str) -> str:
-    return pretty_option_label_impl(
-        kind,
-        raw_value,
-        media_name_map=MEDIA_NAME_MAP,
-        media_type_map=MEDIA_TYPE_MAP,
-        quality_map=QUALITY_MAP,
-    )
-
-
-def media_size_mm_from_value(media: str) -> tuple[float, float] | None:
-    return media_size_mm_from_value_impl(media)
-
-
-def resolve_cups_media_value(
-    selected_media: str,
-    supported_media: list[str],
-    borderless_enabled: bool,
-) -> str:
-    return resolve_cups_media_value_impl(
-        selected_media,
-        supported_media,
-        borderless_enabled,
-    )
-
-
-def is_explicit_borderless_media(media: str) -> bool:
-    return is_explicit_borderless_media_impl(media)
-
-
-def parse_cups_options_output(
-    output: str,
-) -> tuple[dict[str, list[str]], dict[str, str]]:
-    return parse_cups_options_output_impl(
-        output,
-        cups_keys=CUPS_KEYS,
-        cups_aliases=CUPS_ALIASES,
-    )
-
-
-def parse_cups_request_id(output: str) -> str:
-    return parse_cups_request_id_impl(output)
-
-
-def query_cups_job_status_text(request_id: str) -> str:
-    return query_cups_job_status_text_impl(request_id)
-
-
-def create_borderless_calibration_image(
-    width_px: int,
-    height_px: int,
-    scale_percent: int,
-    test_label: str,
-) -> Image.Image:
-    return create_borderless_calibration_image_impl(
-        width_px,
-        height_px,
-        scale_percent,
-        test_label,
-    )
-
-
-def apply_borderless_content_scale(
-    image: Image.Image,
-    scale_percent: int,
-) -> Image.Image:
-    return apply_borderless_content_scale_impl(image, scale_percent)
-
-
-def parse_ipp_job_id(value: str) -> int | None:
-    return parse_ipp_job_id_impl(value)
 
 
 def is_debugger_attached() -> bool:
@@ -1931,68 +1764,34 @@ class MainWindow(QMainWindow):
         clear_log_console_flow(self)
 
     def refresh_print_queue_table(self) -> None:
-        refresh_print_queue_table_actions_flow(
-            self,
-            refresh_print_queue_table_fn=refresh_print_queue_table_presenter,
-        )
+        refresh_print_queue_table_entrypoint(self)
 
     def current_queue_target(self) -> str:
-        return current_queue_target_actions_flow(
-            self,
-            current_queue_target_fn=current_queue_target_flow,
-        )
+        return current_queue_target_entrypoint(self)
 
     def current_ipp_target_name(self) -> str:
-        return current_ipp_target_name_actions_flow(
-            self,
-            current_ipp_target_name_fn=current_ipp_target_name_flow,
-        )
+        return current_ipp_target_name_entrypoint(self)
 
     def enqueue_print_paths(self, paths: list[Path]) -> None:
-        enqueue_print_paths_actions_flow(
-            self,
-            paths,
-            enqueue_print_paths_fn=enqueue_print_paths_flow,
-        )
+        enqueue_print_paths_entrypoint(self, paths)
 
     def process_print_queue(self) -> None:
-        process_print_queue_actions_flow(
-            self,
-            process_print_queue_fn=process_print_queue_flow,
-        )
+        process_print_queue_entrypoint(self)
 
     def pause_print_queue(self) -> None:
-        pause_print_queue_actions_flow(
-            self,
-            pause_print_queue_fn=pause_print_queue_flow,
-        )
+        pause_print_queue_entrypoint(self)
 
     def resume_print_queue(self) -> None:
-        resume_print_queue_actions_flow(
-            self,
-            resume_print_queue_fn=resume_print_queue_flow,
-        )
+        resume_print_queue_entrypoint(self)
 
     def remove_selected_queue_item(self) -> None:
-        remove_selected_queue_item_actions_flow(
-            self,
-            remove_selected_queue_item_fn=remove_selected_queue_item_flow,
-        )
+        remove_selected_queue_item_entrypoint(self)
 
     def cancel_selected_queue_item(self) -> None:
-        cancel_selected_queue_item_actions_flow(
-            self,
-            cancel_selected_queue_item_fn=cancel_selected_queue_item_flow,
-            parse_ipp_job_id_fn=parse_ipp_job_id,
-            cancel_ipp_job_fn=cancel_ipp_job,
-            ipp_backend_error_type=IppBackendError,
-        )
+        cancel_selected_queue_item_entrypoint(self)
 
     def clear_finished_queue_items(self) -> None:
-        clear_finished_queue_items_actions_flow(
-            self,
-            clear_finished_queue_items_fn=clear_finished_queue_items_flow,
-        )
+        clear_finished_queue_items_entrypoint(self)
 
     def append_log(self, level: str, message: str) -> None:
         append_log_flow(
