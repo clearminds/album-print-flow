@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from PySide6.QtGui import QColor
 
 
@@ -172,10 +172,21 @@ def apply_stamp(
         black_rgb = Image.new("RGB", (stamp_w, stamp_h), (0, 0, 0))
         white_rgb = Image.new("RGB", (stamp_w, stamp_h), (255, 255, 255))
         text_rgb = Image.composite(white_rgb, black_rgb, white_mask)
-        red_channel, green_channel, blue_channel = text_rgb.split()
-        text_layer = Image.merge(
-            "RGBA", (red_channel, green_channel, blue_channel, text_mask)
+        border_rgb = Image.composite(black_rgb, white_rgb, white_mask)
+        border_mask = ImageChops.subtract(
+            text_mask.filter(ImageFilter.MaxFilter(3)),
+            text_mask,
         )
+
+        text_layer = Image.new("RGBA", (stamp_w, stamp_h), (0, 0, 0, 0))
+
+        border_r, border_g, border_b = border_rgb.split()
+        border_layer = Image.merge("RGBA", (border_r, border_g, border_b, border_mask))
+        text_layer.alpha_composite(border_layer)
+
+        text_r, text_g, text_b = text_rgb.split()
+        glyph_layer = Image.merge("RGBA", (text_r, text_g, text_b, text_mask))
+        text_layer.alpha_composite(glyph_layer)
     else:
         text_layer = Image.new(
             "RGBA",
