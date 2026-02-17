@@ -1,11 +1,18 @@
 name: Dev Build
 
 on:
+  push:
+    branches:
+      - "development"
+      - "feature/*"
+    tags:
+      - "v*-dev*"
   pull_request:
   workflow_dispatch:
 
 jobs:
   test-and-smoke-build:
+    environment: dev
     strategy:
       fail-fast: false
       matrix:

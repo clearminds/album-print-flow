@@ -4,12 +4,14 @@ on:
   push:
     tags:
       - "v*"
+      - "!v*-dev*"
 
 permissions:
   contents: write
 
 jobs:
   build:
+    environment: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') && 'beta' || 'prod' }}
     strategy:
       fail-fast: false
       matrix:

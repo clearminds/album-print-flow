@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Album Print Flow
+Comment=Crop, stamp and print photo albums
+Exec=album-print-flow %U
+Icon=album-printer
+Terminal=false
+Categories=Graphics;Photography;
+StartupNotify=true
+StartupWMClass=album-printer

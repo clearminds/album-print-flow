@@ -1,0 +1,15 @@
+site_name: Album Print Flow
+site_description: Developer and user documentation for Album Print Flow
+repo_name: album-printer
+
+theme:
+  name: mkdocs
+
+nav:
+  - Home: index.md
+  - Google Photos Setup: google-photos-setup.md
+  - OAuth Bundled Client: oauth-bundled-client.md
+  - Refactor Roadmap: refactor-roadmap.md
+  - Third-Party Notices: third-party-notices.md
+  - Project TODO: project-todo.md
+  - Implementation Plan: plan.md

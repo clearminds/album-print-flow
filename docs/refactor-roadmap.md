@@ -1,0 +1,497 @@
+# Refactor roadmap
+
+This project still has a large controller in src/album_printer/app.py. The ongoing goal is to split it into focused modules while preserving behavior.
+
+## What was just extracted
+
+- Second-wave compat indirection removal completed after canonical rewiring:
+   - removed `printing/flows/compat/*` shim hub
+   - removed `sources/flows/compat/*` shim hub
+   - removed `startup/core/compat/*` compatibility wrappers
+   - removed `startup/contributors/*` wrapper package
+- Package exports now reference canonical modules directly in:
+   - src/album_printer/printing/flows/__init__.py
+   - src/album_printer/sources/flows/__init__.py
+
+- Metadata manager dialog UI logic moved to:
+  - src/album_printer/ui/metadata_manager_dialog.py
+- app.py now delegates via open_cache_manager_dialog(), reducing local method size and coupling.
+- Metadata/cache path utilities moved to:
+   - src/album_printer/metadata_store.py
+- app.py now delegates storage/path helpers (metadata roots, cache dirs, thumbnail cache naming/migration, and storage stats/tree removal) to that module.
+- Metadata context/index helpers moved to:
+   - src/album_printer/metadata_store.py
+- app.py now delegates metadata context key generation, metadata file path hashing, and metadata index persistence writes.
+- Metadata load/save lifecycle helpers moved to:
+   - src/album_printer/metadata_store.py
+- app.py now delegates metadata JSON read/write primitives while keeping migration logging and index update orchestration.
+- Google Album URL completion flow moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `on_source_load_finished(...)` orchestration (teardown, unchanged-set fast path, and finish diagnostics) to that module.
+- Google Album URL startup/bootstrap + live snapshot flows moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `load_google_photos_album_url(...)` and `process_album_sync_live_snapshot(...)` to that module.
+- Quick reload completion orchestration moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `on_source_refresh_finished(...)` to that module.
+- Quick reload startup orchestration moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `refresh_folder(...)` to that module.
+- Folder + Google Photos startup source loading moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `load_folder(...)` and `load_google_photos(...)` to that module.
+- Folder path load + Google setup test flows moved to:
+   - src/album_printer/sources/album_url_load_flow.py
+- app.py now delegates `load_folder_path(...)` and `test_google_setup(...)` to that module.
+- Source flow helpers split by concern:
+   - src/album_printer/sources/source_load_flow.py (folder/google + refresh helpers)
+   - src/album_printer/sources/album_url_load_flow.py (album URL sync/start/live/finish helpers)
+- app.py now imports generic and album URL flow handlers from separate modules.
+- Print queue table presenter moved to:
+   - src/album_printer/ui/print_queue_presenter.py
+- app.py now delegates `refresh_print_queue_table(...)` rendering to that presenter.
+- Print queue processing + cancellation flows moved to:
+   - src/album_printer/printing/print_queue_controller.py
+   - src/album_printer/printing/queue_cancel_flow.py
+- app.py now delegates `process_print_queue(...)` and `cancel_selected_queue_item(...)` to those modules.
+- Source metadata sync + source-apply lifecycle helpers moved to:
+   - src/album_printer/sources/source_metadata_sync.py
+   - src/album_printer/sources/source_apply_flow.py
+- app.py now delegates `update_source_metadata_for_assets(...)` and `apply_source_load_result(...)` to those modules.
+- Nominatim reverse-geocode service moved to:
+   - src/album_printer/location/nominatim_service.py
+- app.py now delegates `reverse_geocode_nominatim(...)` to that service.
+- Settings dialogs split to dedicated ui modules:
+   - src/album_printer/ui/settings_dialog.py
+   - src/album_printer/ui/project_settings_dialog.py
+   - src/album_printer/ui/print_settings_dialog.py
+- app.py now delegates `open_settings_dialog(...)`, `open_project_settings_dialog(...)`, and `open_print_settings_dialog(...)` to those modules.
+- Legacy in-file dialog implementations were removed from app.py after delegate validation:
+   - `_open_project_settings_dialog_legacy(...)`
+   - `_open_print_settings_dialog_legacy(...)`
+- Print dispatch orchestration moved to:
+   - src/album_printer/printing/print_dispatch.py
+- app.py now delegates `execute_print_paths(...)` to that module.
+- Printer setup + CUPS capability/calibration helpers moved to:
+   - src/album_printer/printing/printer_setup_flow.py
+- app.py now delegates `populate_printers_combo(...)`, `is_cups_available(...)`,
+  `get_cups_capabilities(...)`, and `print_borderless_calibration_pages(...)`.
+- CUPS print execution flow moved to:
+   - src/album_printer/printing/cups_print_flow.py
+- app.py now delegates `print_all_via_cups(...)` to that module.
+- Qt print execution flow moved to:
+   - src/album_printer/printing/qt_print_flow.py
+- app.py now delegates `print_all_via_qt(...)` to that module.
+- IPP print execution flow moved to:
+   - src/album_printer/printing/ipp_print_flow.py
+- app.py now delegates `print_all_via_ipp(...)` to that module.
+- Startup preload orchestration is now dynamic and contributor-based:
+   - src/album_printer/startup_preload.py
+   - src/album_printer/printing/printer_setup_flow.py (printing preload contributor)
+   - src/album_printer/sources/startup_preload.py (Google connectivity contributor)
+- app.py now builds preload tasks from modules and runs them through a shared orchestrator.
+- Folder/package scaffolding for structure-first migration is in place:
+   - src/album_printer/startup/ (preload runner + preload registry wrappers)
+   - src/album_printer/startup/contributors/
+   - src/album_printer/printing/flows/
+- app.py now imports startup preload orchestration via `startup/` package modules.
+- Phase 2 folder migration progressed with compatibility shims:
+    - print flow implementations moved into:
+       - src/album_printer/printing/flows/cups.py
+       - src/album_printer/printing/flows/qt.py
+       - src/album_printer/printing/flows/ipp.py
+    - startup preload core moved into:
+       - src/album_printer/startup/preload_core.py
+    - legacy module paths now re-export moved implementations:
+       - src/album_printer/printing/cups_print_flow.py
+       - src/album_printer/printing/qt_print_flow.py
+       - src/album_printer/printing/ipp_print_flow.py
+       - src/album_printer/startup_preload.py
+- Printer Settings dialog startup is now non-blocking:
+   - src/album_printer/ui/print_settings_dialog.py defers initial printer/capability fetch
+     with `QTimer.singleShot(0, ...)` so the dialog opens immediately.
+   - Added in-dialog fetch status text to show loading/completion states.
+- Source flow helpers migrated into a dedicated flows package:
+   - src/album_printer/sources/flows/load.py
+   - src/album_printer/sources/flows/album_url.py
+   - src/album_printer/sources/flows/apply.py
+   - src/album_printer/sources/flows/metadata_sync.py
+   - src/album_printer/sources/flows/__init__.py
+- Legacy source-flow module paths now remain as compatibility shims:
+   - src/album_printer/sources/source_load_flow.py
+   - src/album_printer/sources/album_url_load_flow.py
+   - src/album_printer/sources/source_apply_flow.py
+   - src/album_printer/sources/source_metadata_sync.py
+- app.py now imports source flow handlers from `sources/flows/*`.
+- Settings dialog modules migrated into `ui/dialogs/` package:
+   - src/album_printer/ui/dialogs/settings.py
+   - src/album_printer/ui/dialogs/project_settings.py
+   - src/album_printer/ui/dialogs/print_settings.py
+   - src/album_printer/ui/dialogs/__init__.py
+- Legacy dialog module paths now remain as compatibility shims:
+   - src/album_printer/ui/settings_dialog.py
+   - src/album_printer/ui/project_settings_dialog.py
+   - src/album_printer/ui/print_settings_dialog.py
+- app.py now imports settings dialog delegates from `ui/dialogs/*`.
+- Remaining dialog modules also migrated into `ui/dialogs/` package:
+   - src/album_printer/ui/dialogs/metadata_manager.py
+   - src/album_printer/ui/dialogs/source_guide.py
+- Legacy module paths kept as compatibility shims:
+   - src/album_printer/ui/metadata_manager_dialog.py
+   - src/album_printer/ui/source_guide_dialog.py
+- app.py now imports metadata/source-guide delegates from `ui/dialogs/*`.
+- Printing flow entry points are now consolidated behind a small orchestrator API:
+   - src/album_printer/printing/flows/orchestrator.py
+   - src/album_printer/printing/flows/__init__.py
+- app.py now imports print queue + backend flow entry points from `printing/flows/orchestrator.py`.
+- Printer setup helpers migrated into `printing/flows`:
+   - src/album_printer/printing/flows/setup.py
+- Compatibility shim retained at:
+   - src/album_printer/printing/printer_setup_flow.py
+- app.py now imports printer setup helpers from `printing/flows/setup.py`.
+- Print dispatch flow migrated into `printing/flows`:
+   - src/album_printer/printing/flows/dispatch.py
+- Compatibility shim retained at:
+   - src/album_printer/printing/print_dispatch.py
+- app.py now imports print dispatch from `printing/flows/dispatch.py`.
+- Startup preload runner/registry migrated into `startup/core`:
+   - src/album_printer/startup/core/runner.py
+   - src/album_printer/startup/core/registry.py
+   - src/album_printer/startup/core/__init__.py
+- Compatibility shims retained at:
+   - src/album_printer/startup/preload_runner.py
+   - src/album_printer/startup/preload_registry.py
+- app.py and startup package exports now import preload orchestration from `startup/core/*`.
+- Startup preload core moved into `startup/core/preload.py`:
+   - src/album_printer/startup/core/preload.py
+- Compatibility shim retained at:
+   - src/album_printer/startup/preload_core.py
+- `startup/core/runner.py` and `startup_preload.py` now import preload primitives from `startup/core/preload.py`.
+- Startup contributor modules migrated into `startup/core/contributors`:
+   - src/album_printer/startup/core/contributors/printing.py
+   - src/album_printer/startup/core/contributors/source_connectivity.py
+   - src/album_printer/startup/core/contributors/__init__.py
+- Compatibility shims retained at:
+   - src/album_printer/startup/contributors/printing.py
+   - src/album_printer/startup/contributors/source_connectivity.py
+   - src/album_printer/startup/contributors/__init__.py
+- Registry and compatibility helpers now import contributor builders from `startup/core/contributors/*`.
+- Startup compatibility wrappers centralized under `startup/core/compat`:
+   - src/album_printer/startup/core/compat/preload.py
+   - src/album_printer/startup/core/compat/runner.py
+   - src/album_printer/startup/core/compat/registry.py
+   - src/album_printer/startup/core/compat/contributors.py
+   - src/album_printer/startup/core/compat/__init__.py
+- Legacy wrappers now route through the compat hub:
+   - src/album_printer/startup_preload.py
+   - src/album_printer/startup/preload_core.py
+   - src/album_printer/startup/preload_runner.py
+   - src/album_printer/startup/preload_registry.py
+   - src/album_printer/startup/contributors/__init__.py
+   - src/album_printer/startup/contributors/printing.py
+   - src/album_printer/startup/contributors/source_connectivity.py
+   - src/album_printer/sources/startup_preload.py
+   - src/album_printer/printing/printer_setup_flow.py
+- Startup bootstrapping extracted from `app.py` into:
+   - src/album_printer/startup/core/bootstrap.py
+- Startup package APIs now expose bootstrap entrypoint:
+   - src/album_printer/startup/__init__.py
+   - src/album_printer/startup/core/__init__.py
+- `app.py` startup preload bootstrap now invokes `startup.preload_startup_cache(...)` directly at call site (wrapper removed from `app.py`).
+- Printing compatibility wrappers centralized under `printing/flows/compat`:
+   - src/album_printer/printing/flows/compat/cups.py
+   - src/album_printer/printing/flows/compat/qt.py
+   - src/album_printer/printing/flows/compat/ipp.py
+   - src/album_printer/printing/flows/compat/queue.py
+   - src/album_printer/printing/flows/compat/dispatch.py
+   - src/album_printer/printing/flows/compat/setup.py
+   - src/album_printer/printing/flows/compat/__init__.py
+- Legacy print wrappers now route through the compat hub:
+   - src/album_printer/printing/cups_print_flow.py
+   - src/album_printer/printing/qt_print_flow.py
+   - src/album_printer/printing/ipp_print_flow.py
+   - src/album_printer/printing/print_queue_controller.py
+   - src/album_printer/printing/queue_cancel_flow.py
+   - src/album_printer/printing/print_dispatch.py
+   - src/album_printer/printing/printer_setup_flow.py
+- `printing/flows/__init__.py` now exposes compat-side preload contributor export via `build_printing_startup_preload_tasks`.
+- Queue management flow expanded with queue-target and enqueue orchestration helpers:
+   - src/album_printer/printing/flows/queue_management.py
+- `app.py` now delegates queue target resolution and enqueue orchestration to queue management flow helpers.
+- Status presenter now supports optional timeout forwarding for status-bar messages:
+   - src/album_printer/ui/status_presenter.py
+- Remaining direct `statusBar().showMessage(...)` call sites in `app.py` now route through status presenter helpers.
+- Footer progress orchestration extracted from `app.py` into:
+   - src/album_printer/ui/footer_progress.py
+- Table metadata indexing orchestration extracted from `app.py` into:
+   - src/album_printer/ui/table_metadata_flow.py
+- `app.py` now delegates footer progress and table metadata flow methods to the new UI modules.
+- Table metadata tracking reset/clear-state helper centralized in:
+   - src/album_printer/ui/table_metadata_flow.py (`reset_table_metadata_tracking`)
+- `refresh_image_list_labels(...)` now uses shared table-metadata reset helper instead of inline reset blocks.
+- Album sync control helpers extracted from `app.py` into:
+   - src/album_printer/sources/flows/sync_controls.py
+- `app.py` now delegates album sync stop/cancel/live-update control methods through the source flow module.
+- Image table refresh/row-append orchestration extracted from `app.py` into:
+   - src/album_printer/ui/image_table_flow.py
+- `app.py` now delegates `refresh_image_list_labels(...)`, `populate_image_table_row(...)`, and `append_image_rows(...)` to the image table flow module.
+- Table sorting orchestration extracted from `app.py` into:
+   - src/album_printer/ui/table_sort_flow.py
+- `app.py` now delegates table sort indicator/key/apply/header-click handlers to the table sort flow module.
+- Date/time override dialog + apply/clear flow extracted from `app.py` into:
+   - src/album_printer/ui/datetime_override_flow.py
+- `app.py` now delegates `set_datetime_override_for_selected(...)`, `pick_datetime_override(...)`, `set_datetime_override_for_path(...)`, and `clear_datetime_override_for_selected(...)` to the new UI flow module.
+- Crop reframe/drag/overlay interaction handlers extracted from `app.py` into:
+   - src/album_printer/ui/crop_reframe_flow.py
+- `app.py` now delegates crop reframe toggle/reset, drag lifecycle, and overlay geometry/update helpers to the crop reframe flow module.
+- Image navigation and aspect-mismatch traversal handlers extracted from `app.py` into:
+   - src/album_printer/ui/image_navigation_flow.py
+- `app.py` now delegates previous/next and aspect-mismatch navigation methods to the image navigation flow module.
+- Preview + selection orchestration extracted from `app.py` into:
+   - src/album_printer/ui/preview_flow.py
+- `app.py` now delegates image-settings persistence trigger, processing settings assembly, preview rendering, image selection-change handling, and table-selection bridge handlers to the preview flow module.
+- Project/print settings dialog launch wrappers extracted from `app.py` into:
+   - src/album_printer/ui/dialog_launchers.py
+- `app.py` now delegates `open_project_settings_dialog(...)` and `open_print_settings_dialog(...)` through the dialog launcher module.
+- Startup bookmarked-album scan/prompt flow extracted from `app.py` into:
+   - src/album_printer/sources/flows/startup_bookmarks.py
+- `app.py` now delegates startup scan kickoff, result handling, and update prompt rendering for bookmarked Google album updates.
+- UI/window state restore/save flow extracted from `app.py` into:
+   - src/album_printer/ui/window_state_flow.py
+- `app.py` now delegates `restore_ui_state(...)` and `save_ui_state(...)` through the window state flow module.
+- Queue panel sizing + control/folder/aspect navigation visibility helpers extracted from `app.py` into:
+   - src/album_printer/ui/control_visibility_flow.py
+- `app.py` now delegates `update_queue_panel_max_width(...)`, `update_controls_visibility(...)`, `update_folder_settings_availability(...)`, and `update_aspect_navigation_buttons(...)` through control visibility flow helpers.
+- Image table row lookup helpers extracted from `app.py` into:
+   - src/album_printer/ui/image_table_flow.py
+- `app.py` now delegates `rebuild_image_row_lookup(...)` and `row_for_path(...)` to image table flow helpers.
+- Source asset key/photo-id + global source-state sync helpers extracted from `app.py` into:
+   - src/album_printer/sources/flows/state_sync.py
+- `app.py` now delegates `metadata_key_for_path(...)`, `source_photo_id_for_path(...)`, `sync_global_source_state_from_path(...)`, and `merge_global_source_state_into_folder(...)` to source state-sync flow helpers.
+- Location lookup/cache/format/status helpers extracted from `app.py` into:
+   - src/album_printer/ui/location_lookup_flow.py
+- `app.py` now delegates `location_for_path(...)`, `location_lookup_cache_for_path(...)`, `location_lookup_cached_value_for_path(...)`, `store_location_lookup_for_path(...)`, `format_location(...)`, `effective_location_format_for_path(...)`, `location_lookup_status_for_path(...)`, and `update_location_status_for_path(...)` through location lookup flow helpers.
+- Print history/status mutation helpers extracted from `app.py` into:
+   - src/album_printer/printing/flows/history.py
+- `app.py` now delegates `ensure_photo_entry_for_path(...)`, `is_already_printed(...)`, `latest_print_status_for_path(...)`, `mark_selected_as_printed(...)`, `clear_failed_logs_for_selected(...)`, `clear_selected_print_status(...)`, and `record_print_history(...)` through print history flow helpers.
+- Print selection entry helpers extracted from `app.py` into:
+   - src/album_printer/printing/flows/selection.py
+- `app.py` now delegates `selected_paths_for_printing(...)`, `print_selected(...)`, `print_all(...)`, and `print_paths(...)` through print selection flow helpers.
+- Photo entry/table cache helpers extracted from `app.py` into:
+   - src/album_printer/ui/photo_entry_flow.py
+- `app.py` now delegates `photo_entry_for_path(...)`, `cached_table_values_for_path(...)`, and `store_table_values_for_path(...)` through photo entry flow helpers.
+- Image settings restore + orientation/aspect/date helpers extracted from `app.py` into:
+   - src/album_printer/ui/image_settings_flow.py
+- `app.py` now delegates `restore_image_settings_for_selected(...)`, `detect_orientation_for_path(...)`, `image_dimensions_for_path(...)`, `source_aspect_ratio_label_for_path(...)`, `path_needs_crop_for_aspect(...)`, `aspect_ratio_cell_text_for_path(...)`, `is_crop_settings_modified(...)`, `date_used_for_path(...)`, and `date_used_and_source_for_path(...)` through image settings flow helpers.
+- Image orientation/rotation control handlers extracted from `app.py` into:
+   - src/album_printer/ui/image_transform_flow.py
+- `app.py` now delegates `update_crop_orientation_button_text(...)`, `update_rotate_image_button_text(...)`, `toggle_crop_orientation(...)`, `rotate_selected_image_clockwise(...)`, and `reset_selected_image_rotation(...)` through image transform flow helpers.
+- Thumbnail cache loading/migration + generation kickoff helpers extracted from `app.py` into:
+   - src/album_printer/ui/thumbnail_cache_flow.py
+- `app.py` now delegates `load_cached_thumbnail(...)`, `migrate_thumbnail_cache_for_paths(...)`, and `start_thumbnail_generation(...)` through thumbnail cache flow helpers.
+- Thumbnail worker scheduling/result handlers extracted from `app.py` into:
+   - src/album_printer/ui/thumbnail_worker_flow.py
+- `app.py` now delegates `fill_thumbnail_workers(...)` and `on_thumbnail_ready(...)` through thumbnail worker flow helpers.
+- Folder metadata lifecycle helpers extracted from `app.py` into:
+   - src/album_printer/sources/flows/folder_metadata.py
+- `app.py` now delegates `update_metadata_index(...)`, `load_folder_metadata(...)`, and `save_folder_metadata(...)` through folder metadata flow helpers.
+- Log console filter/visibility/refresh helpers extracted from `app.py` into:
+   - src/album_printer/ui/log_console_flow.py
+- `app.py` now delegates `current_log_level_rank(...)`, `current_log_text_filter(...)`, `_log_entry_visible(...)`, `refresh_log_console(...)`, `on_log_level_changed(...)`, `on_log_text_filter_changed(...)`, and `clear_log_console(...)` through log console flow helpers.
+- Album sync progress log parsing/status helper extracted from `app.py` into:
+   - src/album_printer/ui/album_sync_status_flow.py
+- `app.py` now delegates `maybe_update_album_sync_status_from_log(...)` through album sync status flow helper.
+- Table metadata pause/resume control helper extracted from `app.py` into:
+   - src/album_printer/ui/table_metadata_flow.py
+- `app.py` now delegates `toggle_table_metadata_pause(...)` through table metadata flow helper.
+- Project settings payload/persist helpers extracted from `app.py` into:
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` now delegates `current_project_settings_payload(...)` and `persist_project_settings(...)` through project state flow helpers.
+- Custom location text history helpers extracted from `app.py` into:
+   - src/album_printer/ui/custom_location_text_flow.py
+- `app.py` now delegates `load_custom_location_text_history(...)`, `save_custom_location_text_history(...)`, and `register_custom_location_text(...)` through custom location text flow helpers.
+- App project settings load/save helpers extracted from `app.py` into:
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` now delegates `load_app_project_settings(...)` and `save_app_project_settings(...)` through project state flow helpers.
+- Nominatim settings/cache-path helpers extracted from `app.py` into:
+   - src/album_printer/ui/nominatim_settings_flow.py
+- `app.py` now delegates `nominatim_cache_root(...)`, `nominatim_cache_path(...)`, `load_nominatim_settings(...)`, and `save_nominatim_settings(...)` through nominatim settings flow helpers.
+- Nominatim cache read/write helpers extracted from `app.py` into:
+   - src/album_printer/ui/nominatim_settings_flow.py
+- `app.py` now delegates `load_nominatim_cache(...)` and `save_nominatim_cache(...)` through nominatim settings flow helpers.
+- Nominatim identity/cache-key helpers extracted from `app.py` into:
+   - src/album_printer/ui/nominatim_settings_flow.py
+- `app.py` now delegates `nominatim_user_agent(...)`, `nominatim_cache_key(...)`, and `nominatim_payload_cache_key(...)` through nominatim settings flow helpers.
+- Nominatim geocode formatting helper extracted from `app.py` into:
+   - src/album_printer/ui/nominatim_settings_flow.py
+- `app.py` now delegates `format_nominatim_geocodejson(...)` through nominatim settings flow helpers.
+- App print settings load/save helpers extracted from `app.py` into:
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` now delegates `load_app_print_settings(...)` and `save_app_print_settings(...)` through project state flow helpers.
+- Remaining small Nominatim/print-state wrappers extracted from `app.py` into flow modules:
+   - src/album_printer/ui/nominatim_settings_flow.py
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` now delegates `reverse_geocode_nominatim(...)` through nominatim settings flow and `borderless_enabled(...)` through project state flow.
+- Print-settings parsing utilities centralized in flow layer:
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` no longer keeps local `_as_bool(...)`/`_as_int(...)` helpers; `load_app_print_settings(...)` parsing now lives fully in project state flow.
+- Settings dialog launcher helper extracted from `app.py` into:
+   - src/album_printer/ui/dialog_launchers.py
+- `app.py` now delegates `open_settings_dialog(...)` through dialog launcher helpers.
+- Menu construction flow extracted from `app.py` into:
+   - src/album_printer/ui/menu_flow.py
+- `app.py` now delegates `setup_menu(...)` through menu flow helpers.
+- Help/about dialog handlers extracted from `app.py` into:
+   - src/album_printer/ui/help_flow.py
+- `app.py` now delegates `show_about_dialog(...)` and `show_source_guide_dialog(...)` through help flow helpers.
+- Small metadata/selection state helpers extracted from `app.py` into:
+   - src/album_printer/ui/project_state_flow.py
+- `app.py` now delegates `default_metadata(...)` and `selected_path(...)` through project state flow helpers.
+- Source captured-at resolver extracted from `app.py` into:
+   - src/album_printer/sources/flows/state_sync.py
+- `app.py` now delegates `source_captured_at_for_path(...)` through source state-sync flow helpers.
+- Thread-safe log append wrapper extracted from `app.py` into:
+   - src/album_printer/ui/log_console_flow.py
+- `app.py` now delegates `thread_safe_append_log(...)` through log console flow helpers.
+- Metadata manager launcher wrapper extracted from `app.py` into:
+   - src/album_printer/ui/dialog_launchers.py
+- `app.py` now delegates `open_cache_manager_dialog(...)` through dialog launcher helpers.
+- Metadata/source-id/thumbnail path wrapper helpers extracted from `app.py` into:
+   - src/album_printer/sources/flows/folder_metadata.py
+- `app.py` now delegates `metadata_root_path(...)`, `metadata_source_id(...)`, `metadata_source_dir(...)`, `google_photos_cache_dir(...)`, `google_photos_album_url_cache_dir(...)`, `thumbnail_cache_root_path(...)`, `thumbnail_cache_context_dir(...)`, `thumbnail_cache_file_path(...)`, `thumbnail_cache_legacy_file_path(...)`, `thumbnail_cache_candidate_paths(...)`, `metadata_index_path(...)`, `metadata_context_key(...)`, `legacy_metadata_path(...)`, and `metadata_path(...)` through folder metadata flow helpers.
+- Storage utility and thumbnail migration helpers extracted from `app.py` into:
+   - src/album_printer/sources/flows/folder_metadata.py
+- `app.py` now delegates `format_storage_size(...)`, `path_storage_stats(...)`, `remove_path_tree(...)`, and `migrate_thumbnail_cache_file(...)` through folder metadata flow helpers.
+- Logging path/write orchestration extracted from `app.py` into:
+   - src/album_printer/ui/log_console_flow.py
+- `app.py` now delegates `log_file_path(...)` and `append_log(...)` through log console flow helpers.
+- Queue action wrappers consolidated from `app.py` into:
+   - src/album_printer/printing/flows/queue_actions.py
+- `app.py` now routes `refresh_print_queue_table(...)`, queue target helpers, enqueue/process/pause/resume/remove/cancel queue actions, and `clear_finished_queue_items(...)` through queue actions flow helpers.
+- Image settings normalization helper extracted from `app.py` into:
+   - src/album_printer/ui/image_settings_flow.py
+- `app.py` now delegates `image_settings_for_path(...)` through image settings flow helpers.
+- Image settings file-hash + sync-invalidations helpers extracted from `app.py` into:
+   - src/album_printer/ui/image_settings_flow.py
+- `app.py` now delegates `compute_file_hash(...)`, `set_image_entry_file_hash(...)`, and `sync_image_settings_with_files(...)` through image settings flow helpers.
+- Print status/ignore UI-state helpers extracted from `app.py` into:
+   - src/album_printer/printing/flows/history.py
+- `app.py` now delegates `is_ignored_for_print_all(...)`, `should_include_in_print_all(...)`, `on_ignore_for_print_all_toggled(...)`, and `update_selected_print_info(...)` through print history flow helpers.
+- Custom location-text UI helpers extracted from `app.py` into:
+   - src/album_printer/ui/custom_location_text_flow.py
+- `app.py` now delegates `current_custom_location_text(...)`, `copy_location_from_previous_image(...)`, and `refresh_custom_location_text_options(...)` through custom location text flow helpers.
+- Embedded preview widget class extracted from `app.py` into:
+   - src/album_printer/ui/preview_label.py
+- `app.py` now imports `PreviewLabel` from the UI module (moved widget methods: init/drag/overlay/paint/resize-corner/mouse handlers).
+- Source load/refresh/bookmark worker classes extracted from `app.py` into:
+   - src/album_printer/sources/workers.py
+- `app.py` now imports `SourceRefreshWorker`, `SourceLoadWorker`, and `BookmarkScanWorker` from the sources worker module.
+- Window/table event wrappers extracted from `app.py` into:
+   - src/album_printer/ui/window_event_flow.py
+- `app.py` now delegates `closeEvent(...)`, `resizeEvent(...)`, `apply_sort_order(...)`, `on_image_table_cell_double_clicked(...)`, and `on_image_table_cell_changed(...)` through window event flow helpers.
+- Image-list orientation label helper extracted from `app.py` into:
+   - src/album_printer/ui/image_settings_flow.py
+- `app.py` now delegates `image_list_label(...)` through image settings flow helpers.
+- Shared top-level utility helpers extracted from `app.py` into:
+   - src/album_printer/app_primitives.py
+- `app.py` now imports datetime parsing, EXIF DMS conversion helpers, location template/render helpers, crop/ratio helpers, and rotation normalization/transform helpers from `app_primitives`.
+- Thumbnail worker implementation extracted from `app.py` into:
+   - src/album_printer/ui/thumbnail_worker.py
+- `app.py` now imports `ThumbnailWorker` from the UI worker module, and thumbnail worker flow now injects decode dependencies (`load_image_as_rgb` + thumbnail size) explicitly.
+- Main window UI construction helpers extracted from `MainWindow.__init__` into:
+   - src/album_printer/ui/main_window_builders.py
+- `app.py` now delegates image-table setup, preview widget setup, log widget setup, and queue widget setup to builder helpers.
+- Rendering/stamp helper cluster extracted from `app.py` into:
+   - src/album_printer/rendering_helpers.py
+- `app.py` now routes `stamp_text(...)`, `location_stamp_text(...)`, `load_stamp_font(...)`, `apply_stamp(...)`, `render_image(...)`, and `render_preview_image(...)` through rendering helper functions.
+- CUPS/media/calibration helper cluster extracted from `app.py` into:
+   - src/album_printer/printing_helpers.py
+- `app.py` now routes `pretty_option_label(...)`, `media_size_mm_from_value(...)`, `resolve_cups_media_value(...)`, `is_explicit_borderless_media(...)`, `parse_cups_options_output(...)`, `parse_cups_request_id(...)`, `query_cups_job_status_text(...)`, `create_borderless_calibration_image(...)`, `apply_borderless_content_scale(...)`, and `parse_ipp_job_id(...)` through printing helpers.
+- App branding/splash helper cluster extracted from `app.py` into:
+   - src/album_printer/app_branding.py
+- `app.py` now routes branding/runtime/about/logo/icon/splash helpers through app-branding module functions.
+- Image metadata/decode helper cluster extracted from `app.py` into:
+   - src/album_printer/image_io_helpers.py
+- `app.py` now routes metadata cache-key/EXIF extraction helpers, metadata-cache read/write helpers, datetime/location resolver helpers, sidecar-aware image decoding, and original-metadata path resolution through image I/O helper functions.
+- Additional `MainWindow.__init__` layout/status assembly extracted into builder helpers:
+   - src/album_printer/ui/main_window_builders.py
+- `app.py` now delegates top-action row assembly, content/bottom splitter composition, log/queue panel composition, central-widget wiring, and status/footer progress widget setup through main-window builder helpers.
+- Additional `MainWindow.__init__` action/control construction extracted into builder helpers:
+   - src/album_printer/ui/main_window_builders.py
+- `app.py` now delegates load/source menu actions, primary action button creation, control widget creation (crop/datetime/location/print-state/sliders), and control form layout assembly through main-window builder helpers.
+- App startup run-loop orchestration extracted from `app.py` into:
+   - src/album_printer/startup/app_runner.py
+- `app.py` now delegates `run_application(...)` to startup app-runner orchestration with injected `MainWindow`, splash/branding helpers, preload function, and settings constants.
+- Main window runtime/default state initialization extracted from `MainWindow.__init__` into:
+   - src/album_printer/ui/main_window_state_init.py
+- `app.py` now delegates startup cache parsing, runtime state/cache setup, default option initialization, and persisted setting loads to `initialize_main_window_state(...)`.
+- Main window shell + startup-finalization boilerplate extracted from `MainWindow.__init__` into:
+   - src/album_printer/ui/main_window_builders.py
+- `app.py` now delegates title/icon/initial-size setup to `initialize_window_shell(...)` and restore/menu/startup-log/queue-refresh/bookmark-scan scheduling to `finalize_main_window_setup(...)`.
+- Processing settings data model extracted from `app.py` into:
+   - src/album_printer/processing_settings.py
+- `app.py` now imports `ProcessingSettings` from the dedicated module for rendering and per-image settings flows.
+- Main window UI assembly sequence in `MainWindow.__init__` consolidated behind:
+   - src/album_printer/ui/main_window_builders.py (`build_main_window_ui(...)`)
+- `app.py` now delegates image-table/preview/actions/controls/log/queue/layout/status builder orchestration through a single builder entrypoint.
+- App-branding path/icon/pixmap wrappers removed from `app.py` after making helper defaults optional in:
+   - src/album_printer/app_branding.py
+- `app.py` now imports and uses branding path/icon/pixmap helpers directly (`logo_path`, `app_window_icon`, `load_logo_pixmap`, `load_clearminds_*`) instead of local wrapper delegates.
+- Settings/dialog dependency wiring extracted from `MainWindow` method bodies into module-level maps in:
+   - src/album_printer/app.py (`OPEN_*_DIALOG_FLOW_KWARGS`)
+- `open_settings_dialog(...)`, `open_project_settings_dialog(...)`, and `open_print_settings_dialog(...)` now delegate via shared kwargs maps, keeping class methods thin while preserving existing flow dependencies.
+- Printing setup compatibility shim export corrected in:
+   - src/album_printer/printing/printer_setup_flow.py
+- `build_printing_startup_preload_tasks` is now explicitly imported and re-exported from the shim to keep compatibility exports complete.
+- Print/source delegate dependency wiring extracted ahead of further method shortening:
+   - src/album_printer/app.py (`PRINT_*_FLOW_KWARGS`, `LOAD_GOOGLE_PHOTOS_ALBUM_URL_FLOW_KWARGS`, `REFRESH_FOLDER_FLOW_KWARGS`)
+- `print_borderless_calibration_pages(...)`, `print_all_via_cups(...)`, `print_all_via_qt(...)`, `print_all_via_ipp(...)`, `load_google_photos_album_url(...)`, and `refresh_folder(...)` now use shared kwargs maps so heavy dependency wiring is moved out before additional class-level reductions.
+- Additional dependency/constant wiring extracted from delegate bodies into module-level maps in:
+   - src/album_printer/app.py (`LOCATION_*_FLOW_KWARGS`, `IMAGE_*_FLOW_KWARGS`, `*_TABLE_METADATA_*_FLOW_KWARGS`)
+- `location_for_path(...)`, `format_location(...)`, `effective_location_format_for_path(...)`, `location_lookup_status_for_path(...)`, `update_location_status_for_path(...)`, `image_settings_for_path(...)`, `image_dimensions_for_path(...)`, `path_needs_crop_for_aspect(...)`, `date_used_and_source_for_path(...)`, `current_table_metadata_batch_size(...)`, and `process_table_metadata_batch(...)` now delegate through shared kwargs maps.
+- Largest remaining constructor orchestration extracted from `app.py` into:
+   - src/album_printer/ui/main_window_startup.py (`initialize_main_window(...)`)
+- `MainWindow.__init__` now delegates startup shell/state/UI/finalization via a single helper and shared `MAIN_WINDOW_STARTUP_KWARGS` map in `app.py`.
+- Main window print entrypoint wrappers extracted from `app.py` into:
+   - src/album_printer/printing/main_window_print_entrypoints.py
+- `print_borderless_calibration_pages(...)`, `print_all_via_cups(...)`, `print_all_via_qt(...)`, `record_print_history(...)`, `print_paths(...)`, `execute_print_paths(...)`, and `print_all_via_ipp(...)` now delegate through the dedicated print entrypoint module with injected flow functions/kwargs.
+- Unused placeholder/compat shim modules removed (0 internal references) to reduce migration clutter:
+   - removed legacy top-level shim files under `printing/`, `sources/`, `startup/`, and `ui/` that only re-exported newer modules.
+- Build validation after deletions is clean (`python -m compileall src`).
+
+## Next extraction candidates
+
+1. Source loading flows
+   - optionally rename/rehome source flow helper modules into a `source_controller` package.
+2. Print queue orchestration follow-up
+   - continue extracting remaining queue and printer orchestration internals into focused modules.
+3. Folder migration phase 2
+   - move legacy top-level modules into new package folders and add compatibility shims as needed.
+    - source startup preload contributor moved into:
+       - src/album_printer/startup/contributors/source_connectivity.py
+    - compatibility shim retained at:
+       - src/album_printer/sources/startup_preload.py
+    - printing startup preload contributor moved into:
+       - src/album_printer/startup/contributors/printing.py
+    - compatibility API retained via:
+       - src/album_printer/printing/printer_setup_flow.py
+    - queue controller/cancel moved into:
+       - src/album_printer/printing/flows/queue_controller.py
+       - src/album_printer/printing/flows/queue_cancel.py
+    - compatibility shims retained at:
+       - src/album_printer/printing/print_queue_controller.py
+       - src/album_printer/printing/queue_cancel_flow.py
+   - next target: (batch x10) continue folder migration and remaining queue/status extraction follow-ups.
+3. Logging + footer progress glue
+   - centralize status/progress updates into a small presenter/service.
+
+## Refactor principles
+
+- Keep behavior unchanged first; improve APIs second.
+- Move one cohesive slice at a time and validate with compile checks.
+- Prefer thin delegation in app.py to maintain readable entry points.
+- Keep UI code in ui/* and state/storage code in dedicated non-UI modules.
+
+## Suggested cadence
+
+- Each refactor PR should extract one slice, include compile validation, and update this roadmap with the completed item.

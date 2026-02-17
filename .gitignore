@@ -11,3 +11,4 @@ release/
 images/
 *.egg-info/
 src/album_printer.egg-info/
+src/album_printer/oauth/google_client_secret.json

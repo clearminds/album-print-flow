@@ -8,6 +8,17 @@ from PySide6.QtGui import QColor
 VALID_CORNERS = {"Bottom Right", "Bottom Left", "Top Right", "Top Left"}
 VALID_STAMP_MODES = {"None", "Date", "Date + Time"}
 VALID_CLOCK_MODES = {"24h", "12h"}
+VALID_LOCATION_STAMP_MODES = {"Off", "Coordinates"}
+VALID_LOCATION_FORMATS = {
+    "Address Label",
+    "Street Address",
+    "City, Region",
+    "County, Country",
+    "Country",
+    "Custom Template",
+    "Lat/Lon",
+    "DMS",
+}
 
 
 PROJECT_SETTING_KEYS = [
@@ -26,6 +37,17 @@ PROJECT_SETTING_KEYS = [
     "stamp_color",
     "stamp_border_color",
     "stamp_vertical",
+    "location_stamp_mode",
+    "location_format",
+    "location_format_template",
+    "location_corner_landscape",
+    "location_corner_portrait",
+    "location_stamp_scale_percent",
+    "location_stamp_offset_x_px",
+    "location_stamp_offset_y_px",
+    "location_stamp_color",
+    "location_stamp_border_color",
+    "location_stamp_vertical",
 ]
 
 
@@ -155,6 +177,110 @@ def load_app_project_settings(
     values["stamp_vertical"] = _as_bool(
         settings.value("settings/stamp_vertical", values["stamp_vertical"]),
         bool(values["stamp_vertical"]),
+    )
+
+    location_stamp_mode = str(
+        settings.value("settings/location_stamp_mode", values["location_stamp_mode"])
+    )
+    if location_stamp_mode in VALID_LOCATION_STAMP_MODES:
+        values["location_stamp_mode"] = location_stamp_mode
+
+    location_format = str(
+        settings.value("settings/location_format", values["location_format"])
+    )
+    if location_format in VALID_LOCATION_FORMATS:
+        values["location_format"] = location_format
+
+    location_format_template = str(
+        settings.value(
+            "settings/location_format_template",
+            values["location_format_template"],
+        )
+    ).strip()
+    values["location_format_template"] = location_format_template or str(
+        values["location_format_template"]
+    )
+
+    location_corner_landscape = str(
+        settings.value(
+            "settings/location_corner_landscape",
+            values["location_corner_landscape"],
+        )
+    )
+    if location_corner_landscape in VALID_CORNERS:
+        values["location_corner_landscape"] = location_corner_landscape
+
+    location_corner_portrait = str(
+        settings.value(
+            "settings/location_corner_portrait",
+            values["location_corner_portrait"],
+        )
+    )
+    if location_corner_portrait in VALID_CORNERS:
+        values["location_corner_portrait"] = location_corner_portrait
+
+    location_scale = _as_int(
+        settings.value(
+            "settings/location_stamp_scale_percent",
+            values["location_stamp_scale_percent"],
+        ),
+        int(values["location_stamp_scale_percent"]),
+    )
+    values["location_stamp_scale_percent"] = max(
+        stamp_scale_min,
+        min(stamp_scale_max, location_scale),
+    )
+
+    location_offset_x = _as_int(
+        settings.value(
+            "settings/location_stamp_offset_x_px",
+            values["location_stamp_offset_x_px"],
+        ),
+        int(values["location_stamp_offset_x_px"]),
+    )
+    values["location_stamp_offset_x_px"] = max(
+        stamp_offset_min,
+        min(stamp_offset_max, location_offset_x),
+    )
+
+    location_offset_y = _as_int(
+        settings.value(
+            "settings/location_stamp_offset_y_px",
+            values["location_stamp_offset_y_px"],
+        ),
+        int(values["location_stamp_offset_y_px"]),
+    )
+    values["location_stamp_offset_y_px"] = max(
+        stamp_offset_min,
+        min(stamp_offset_max, location_offset_y),
+    )
+
+    location_stamp_color = str(
+        settings.value(
+            "settings/location_stamp_color",
+            values["location_stamp_color"],
+        )
+    )
+    location_color = QColor(location_stamp_color)
+    if location_color.isValid():
+        values["location_stamp_color"] = location_color.name().upper()
+
+    location_stamp_border_color = str(
+        settings.value(
+            "settings/location_stamp_border_color",
+            values["location_stamp_border_color"],
+        )
+    )
+    location_border_color = QColor(location_stamp_border_color)
+    if location_border_color.isValid():
+        values["location_stamp_border_color"] = location_border_color.name().upper()
+
+    values["location_stamp_vertical"] = _as_bool(
+        settings.value(
+            "settings/location_stamp_vertical",
+            values["location_stamp_vertical"],
+        ),
+        bool(values["location_stamp_vertical"]),
     )
 
     return values
