@@ -4,7 +4,15 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import (
+    Image,
+    ImageChops,
+    ImageDraw,
+    ImageEnhance,
+    ImageFilter,
+    ImageFont,
+    ImageStat,
+)
 from PySide6.QtGui import QColor
 
 
@@ -168,25 +176,49 @@ def apply_stamp(
             text_mask = text_mask.rotate(90, expand=True)
 
         sample_region = image.crop((x, y, x + stamp_w, y + stamp_h)).convert("L")
-        white_mask = sample_region.point(lambda p: 255 if p < 128 else 0)
-        black_rgb = Image.new("RGB", (stamp_w, stamp_h), (0, 0, 0))
-        white_rgb = Image.new("RGB", (stamp_w, stamp_h), (255, 255, 255))
-        text_rgb = Image.composite(white_rgb, black_rgb, white_mask)
-        border_rgb = Image.composite(black_rgb, white_rgb, white_mask)
-        border_mask = ImageChops.subtract(
-            text_mask.filter(ImageFilter.MaxFilter(3)),
-            text_mask,
-        )
-
         text_layer = Image.new("RGBA", (stamp_w, stamp_h), (0, 0, 0, 0))
+        cursor_x = -left
+        for char in text:
+            char_mask_base = Image.new("L", (base_layer_width, base_layer_height), 0)
+            char_draw = ImageDraw.Draw(char_mask_base)
+            char_draw.text((cursor_x, -top), char, fill=255, font=font)
+            cursor_x += draw.textlength(char, font=font)
 
-        border_r, border_g, border_b = border_rgb.split()
-        border_layer = Image.merge("RGBA", (border_r, border_g, border_b, border_mask))
-        text_layer.alpha_composite(border_layer)
+            if stamp_vertical:
+                char_mask = char_mask_base.rotate(90, expand=True)
+            else:
+                char_mask = char_mask_base
 
-        text_r, text_g, text_b = text_rgb.split()
-        glyph_layer = Image.merge("RGBA", (text_r, text_g, text_b, text_mask))
-        text_layer.alpha_composite(glyph_layer)
+            char_bbox = char_mask.getbbox()
+            if char_bbox is None:
+                continue
+
+            char_mask_crop = char_mask.crop(char_bbox)
+            char_sample_crop = sample_region.crop(char_bbox)
+            mean_luma = float(ImageStat.Stat(char_sample_crop, char_mask_crop).mean[0])
+            if mean_luma < 128.0:
+                glyph_rgb = (255, 255, 255)
+                border_rgb = (0, 0, 0)
+            else:
+                glyph_rgb = (0, 0, 0)
+                border_rgb = (255, 255, 255)
+
+            border_mask = ImageChops.subtract(
+                char_mask.filter(ImageFilter.MaxFilter(3)),
+                char_mask,
+            )
+            border_mask_crop = border_mask.crop(char_bbox)
+
+            bbox_w = char_bbox[2] - char_bbox[0]
+            bbox_h = char_bbox[3] - char_bbox[1]
+
+            border_layer = Image.new("RGBA", (bbox_w, bbox_h), border_rgb + (0,))
+            border_layer.putalpha(border_mask_crop)
+            text_layer.alpha_composite(border_layer, (char_bbox[0], char_bbox[1]))
+
+            glyph_layer = Image.new("RGBA", (bbox_w, bbox_h), glyph_rgb + (0,))
+            glyph_layer.putalpha(char_mask_crop)
+            text_layer.alpha_composite(glyph_layer, (char_bbox[0], char_bbox[1]))
     else:
         text_layer = Image.new(
             "RGBA",
