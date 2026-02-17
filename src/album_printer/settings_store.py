@@ -37,6 +37,7 @@ PROJECT_SETTING_KEYS = [
     "stamp_color",
     "stamp_border_color",
     "stamp_vertical",
+    "stamp_adaptive_text",
     "location_stamp_mode",
     "location_format",
     "location_format_template",
@@ -177,6 +178,13 @@ def load_app_project_settings(
     values["stamp_vertical"] = _as_bool(
         settings.value("settings/stamp_vertical", values["stamp_vertical"]),
         bool(values["stamp_vertical"]),
+    )
+    values["stamp_adaptive_text"] = _as_bool(
+        settings.value(
+            "settings/stamp_adaptive_text",
+            values["stamp_adaptive_text"],
+        ),
+        bool(values["stamp_adaptive_text"]),
     )
 
     location_stamp_mode = str(

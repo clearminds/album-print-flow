@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageStat
 from PySide6.QtGui import QColor
 
 
@@ -112,6 +112,32 @@ def apply_stamp(
     font = load_stamp_font_fn(settings.stamp_font, font_size)
 
     stroke_width = max(2, int(font_size * 0.12))
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+    text_width = right - left
+    text_height = bottom - top
+
+    base_layer_width = text_width + stroke_width * 2
+    base_layer_height = text_height + stroke_width * 2
+    if stamp_vertical:
+        stamp_w = base_layer_height
+        stamp_h = base_layer_width
+    else:
+        stamp_w = base_layer_width
+        stamp_h = base_layer_height
+
+    if "Top" in stamp_corner:
+        y = margin_y
+    else:
+        y = image.height - stamp_h - margin_y
+
+    if "Left" in stamp_corner:
+        x = margin_x
+    else:
+        x = image.width - stamp_w - margin_x
+
+    x = max(0, min(image.width - stamp_w, x))
+    y = max(0, min(image.height - stamp_h, y))
+
     color = QColor(stamp_color)
     if not color.isValid():
         color = QColor(default_stamp_color)
@@ -119,13 +145,24 @@ def apply_stamp(
     if not border_color.isValid():
         border_color = QColor(default_stamp_border_color)
 
-    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
-    text_width = right - left
-    text_height = bottom - top
+    adaptive_text_enabled = (
+        bool(getattr(settings, "stamp_adaptive_text", False))
+        and color_value is None
+        and border_color_value is None
+    )
+    if adaptive_text_enabled and stamp_w > 0 and stamp_h > 0:
+        sample_region = image.crop((x, y, x + stamp_w, y + stamp_h)).convert("L")
+        mean_luminance = float(ImageStat.Stat(sample_region).mean[0])
+        if mean_luminance >= 128.0:
+            color = QColor("#000000")
+            border_color = QColor("#FFFFFF")
+        else:
+            color = QColor("#FFFFFF")
+            border_color = QColor("#000000")
 
     text_layer = Image.new(
         "RGBA",
-        (text_width + stroke_width * 2, text_height + stroke_width * 2),
+        (base_layer_width, base_layer_height),
         (0, 0, 0, 0),
     )
     text_draw = ImageDraw.Draw(text_layer)
@@ -140,21 +177,6 @@ def apply_stamp(
 
     if stamp_vertical:
         text_layer = text_layer.rotate(90, expand=True)
-
-    stamp_w, stamp_h = text_layer.size
-
-    if "Top" in stamp_corner:
-        y = margin_y
-    else:
-        y = image.height - stamp_h - margin_y
-
-    if "Left" in stamp_corner:
-        x = margin_x
-    else:
-        x = image.width - stamp_w - margin_x
-
-    x = max(0, min(image.width - stamp_w, x))
-    y = max(0, min(image.height - stamp_h, y))
 
     image.alpha_composite(text_layer, (x, y))
     return image.convert("RGB")

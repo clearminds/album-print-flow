@@ -23,6 +23,7 @@ class ProcessingSettings:
     stamp_color: str = "#FF9100"
     stamp_border_color: str = "#000000"
     stamp_vertical: bool = False
+    stamp_adaptive_text: bool = False
     datetime_override: datetime | None = None
     location_text: str = ""
     location_stamp_enabled: bool = False

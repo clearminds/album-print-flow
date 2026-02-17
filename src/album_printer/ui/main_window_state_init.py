@@ -175,6 +175,7 @@ def initialize_main_window_state(
     window.stamp_color_value = default_stamp_color
     window.stamp_border_color_value = default_stamp_border_color
     window.stamp_vertical_value = False
+    window.stamp_adaptive_text_value = False
     window.location_stamp_mode_value = "Off"
     window.location_format_value = "Address Label"
     window.location_format_template_value = location_format_template_default

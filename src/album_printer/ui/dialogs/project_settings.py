@@ -129,6 +129,7 @@ def open_project_settings_dialog(
         "stamp_offset_x_px": window.stamp_offset_x_px,
         "stamp_offset_y_px": window.stamp_offset_y_px,
         "stamp_vertical_value": window.stamp_vertical_value,
+        "stamp_adaptive_text_value": window.stamp_adaptive_text_value,
         "stamp_color_value": window.stamp_color_value,
         "stamp_border_color_value": window.stamp_border_color_value,
         "location_stamp_scale_percent": window.location_stamp_scale_percent,
@@ -509,6 +510,8 @@ def open_project_settings_dialog(
 
     stamp_vertical_checkbox = QCheckBox("Vertical stamp", dialog)
     stamp_vertical_checkbox.setChecked(window.stamp_vertical_value)
+    stamp_adaptive_text_checkbox = QCheckBox("Adaptive Text", dialog)
+    stamp_adaptive_text_checkbox.setChecked(window.stamp_adaptive_text_value)
 
     stamp_color_button = QPushButton(dialog)
     stamp_color_reset_button = QPushButton("Reset", dialog)
@@ -778,6 +781,7 @@ def open_project_settings_dialog(
         window.stamp_offset_x_px = stamp_offset_x_slider.value()
         window.stamp_offset_y_px = stamp_offset_y_slider.value()
         window.stamp_vertical_value = stamp_vertical_checkbox.isChecked()
+        window.stamp_adaptive_text_value = stamp_adaptive_text_checkbox.isChecked()
         window.stamp_color_value = stamp_color_value
         window.stamp_border_color_value = stamp_border_color_value
         window.refresh_preview()
@@ -851,6 +855,7 @@ def open_project_settings_dialog(
             stamp_color=stamp_color_value,
             stamp_border_color=stamp_border_color_value,
             stamp_vertical=stamp_vertical_checkbox.isChecked(),
+            stamp_adaptive_text=stamp_adaptive_text_checkbox.isChecked(),
             datetime_override=preview_datetime,
         )
         image = apply_stamp_fn(image, stamp_text_value, settings_preview)
@@ -1023,6 +1028,9 @@ def open_project_settings_dialog(
     stamp_vertical_checkbox.toggled.connect(
         lambda _checked: apply_dialog_preview_values()
     )
+    stamp_adaptive_text_checkbox.toggled.connect(
+        lambda _checked: apply_dialog_preview_values()
+    )
 
     original_pick_stamp_color = pick_stamp_color
 
@@ -1151,6 +1159,7 @@ def open_project_settings_dialog(
     form.addRow("Timestamp Offset X", stamp_offset_x_row)
     form.addRow("Timestamp Offset Y", stamp_offset_y_row)
     form.addRow("Text Direction", stamp_vertical_checkbox)
+    form.addRow("Adaptive Text", stamp_adaptive_text_checkbox)
     form.addRow("Timestamp Color", stamp_color_row)
     form.addRow("Timestamp Border", stamp_border_color_row)
     form.addRow(section_label("Location Stamp"), QLabel("", dialog))
@@ -1221,6 +1230,9 @@ def open_project_settings_dialog(
         window.stamp_offset_x_px = int(original_values["stamp_offset_x_px"])
         window.stamp_offset_y_px = int(original_values["stamp_offset_y_px"])
         window.stamp_vertical_value = bool(original_values["stamp_vertical_value"])
+        window.stamp_adaptive_text_value = bool(
+            original_values["stamp_adaptive_text_value"]
+        )
         window.stamp_color_value = str(original_values["stamp_color_value"])
         window.stamp_border_color_value = str(
             original_values["stamp_border_color_value"]
@@ -1253,6 +1265,7 @@ def open_project_settings_dialog(
     window.stamp_offset_x_px = stamp_offset_x_slider.value()
     window.stamp_offset_y_px = stamp_offset_y_slider.value()
     window.stamp_vertical_value = stamp_vertical_checkbox.isChecked()
+    window.stamp_adaptive_text_value = stamp_adaptive_text_checkbox.isChecked()
     window.stamp_color_value = stamp_color_value
     window.stamp_border_color_value = stamp_border_color_value
 
