@@ -166,14 +166,150 @@ def print_all_via_ipp_flow_kwargs(
     }
 
 
+def location_for_path_flow_kwargs(
+    *, exif_location_for_image_fn: object
+) -> dict[str, object]:
+    return {
+        "exif_location_for_image_fn": exif_location_for_image_fn,
+    }
+
+
+def format_location_flow_kwargs(
+    *,
+    decimal_to_dms_fn: object,
+    location_format_needs_reverse_lookup_fn: object,
+) -> dict[str, object]:
+    return {
+        "decimal_to_dms_fn": decimal_to_dms_fn,
+        "location_format_needs_reverse_lookup_fn": (
+            location_format_needs_reverse_lookup_fn
+        ),
+    }
+
+
+def effective_location_format_flow_kwargs(
+    *, location_format_options: list[str]
+) -> dict[str, object]:
+    return {
+        "location_format_options": location_format_options,
+    }
+
+
+def location_lookup_status_flow_kwargs(
+    *, location_format_needs_reverse_lookup_fn: object
+) -> dict[str, object]:
+    return {
+        "location_format_needs_reverse_lookup_fn": (
+            location_format_needs_reverse_lookup_fn
+        ),
+    }
+
+
+def update_location_status_flow_kwargs(*, table_col_location: int) -> dict[str, object]:
+    return {
+        "table_col_location": table_col_location,
+    }
+
+
+def image_settings_for_path_flow_kwargs(
+    *,
+    normalize_rotation_degrees_fn: object,
+    per_image_location_stamp_overrides: list[str],
+) -> dict[str, object]:
+    return {
+        "normalize_rotation_degrees_fn": normalize_rotation_degrees_fn,
+        "per_image_location_stamp_overrides": per_image_location_stamp_overrides,
+    }
+
+
+def image_dimensions_flow_kwargs(
+    *,
+    original_metadata_path_for_image_fn: object,
+    load_image_as_rgb_fn: object,
+) -> dict[str, object]:
+    return {
+        "original_metadata_path_for_image_fn": original_metadata_path_for_image_fn,
+        "load_image_as_rgb_fn": load_image_as_rgb_fn,
+    }
+
+
+def path_needs_crop_flow_kwargs(
+    *,
+    normalize_rotation_degrees_fn: object,
+    parse_ratio_pair_fn: object,
+    ratios_match_either_orientation_fn: object,
+) -> dict[str, object]:
+    return {
+        "normalize_rotation_degrees_fn": normalize_rotation_degrees_fn,
+        "parse_ratio_pair_fn": parse_ratio_pair_fn,
+        "ratios_match_either_orientation_fn": ratios_match_either_orientation_fn,
+    }
+
+
+def date_used_and_source_flow_kwargs(
+    *,
+    parse_datetime_override_fn: object,
+    exif_datetime_for_image_fn: object,
+    parse_datetime_from_filename_fn: object,
+) -> dict[str, object]:
+    return {
+        "parse_datetime_override_fn": parse_datetime_override_fn,
+        "exif_datetime_for_image_fn": exif_datetime_for_image_fn,
+        "parse_datetime_from_filename_fn": parse_datetime_from_filename_fn,
+    }
+
+
+def current_table_metadata_batch_size_flow_kwargs(
+    *,
+    scroll_window_seconds: float,
+    batch_size_scrolling: int,
+    batch_size_idle: int,
+) -> dict[str, object]:
+    return {
+        "scroll_window_seconds": scroll_window_seconds,
+        "batch_size_scrolling": batch_size_scrolling,
+        "batch_size_idle": batch_size_idle,
+    }
+
+
+def process_table_metadata_batch_flow_kwargs(
+    *,
+    table_col_date_used: int,
+    table_col_location: int,
+    table_col_aspect: int,
+    scroll_window_seconds: float,
+    batch_size_scrolling: int,
+    batch_size_idle: int,
+) -> dict[str, object]:
+    return {
+        "table_col_date_used": table_col_date_used,
+        "table_col_location": table_col_location,
+        "table_col_aspect": table_col_aspect,
+        "scroll_window_seconds": scroll_window_seconds,
+        "batch_size_scrolling": batch_size_scrolling,
+        "batch_size_idle": batch_size_idle,
+    }
+
+
 __all__ = [
+    "current_table_metadata_batch_size_flow_kwargs",
+    "date_used_and_source_flow_kwargs",
+    "effective_location_format_flow_kwargs",
+    "format_location_flow_kwargs",
+    "image_dimensions_flow_kwargs",
+    "image_settings_for_path_flow_kwargs",
     "load_google_photos_album_url_flow_kwargs",
+    "location_for_path_flow_kwargs",
+    "location_lookup_status_flow_kwargs",
     "open_print_settings_dialog_flow_kwargs",
     "open_project_settings_dialog_flow_kwargs",
     "open_settings_dialog_flow_kwargs",
+    "path_needs_crop_flow_kwargs",
     "print_all_via_cups_flow_kwargs",
     "print_all_via_ipp_flow_kwargs",
     "print_all_via_qt_flow_kwargs",
     "print_borderless_calibration_flow_kwargs",
+    "process_table_metadata_batch_flow_kwargs",
     "refresh_folder_flow_kwargs",
+    "update_location_status_flow_kwargs",
 ]

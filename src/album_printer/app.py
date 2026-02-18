@@ -21,15 +21,26 @@ from album_printer.app_branding import (
     load_logo_pixmap,
 )
 from album_printer.app_flow_kwargs import (
+    current_table_metadata_batch_size_flow_kwargs,
+    date_used_and_source_flow_kwargs,
+    effective_location_format_flow_kwargs,
+    format_location_flow_kwargs,
+    image_dimensions_flow_kwargs,
+    image_settings_for_path_flow_kwargs,
     load_google_photos_album_url_flow_kwargs,
+    location_for_path_flow_kwargs,
+    location_lookup_status_flow_kwargs,
     open_print_settings_dialog_flow_kwargs,
     open_project_settings_dialog_flow_kwargs,
     open_settings_dialog_flow_kwargs,
+    path_needs_crop_flow_kwargs,
     print_all_via_cups_flow_kwargs,
     print_all_via_ipp_flow_kwargs,
     print_all_via_qt_flow_kwargs,
     print_borderless_calibration_flow_kwargs,
+    process_table_metadata_batch_flow_kwargs,
     refresh_folder_flow_kwargs,
+    update_location_status_flow_kwargs,
 )
 from album_printer.app_image_entrypoints import (
     datetime_for_image,
@@ -976,63 +987,65 @@ MAIN_WINDOW_STARTUP_KWARGS = {
     "startup_scan_delay_ms": 1400,
 }
 
-LOCATION_FOR_PATH_FLOW_KWARGS = {
-    "exif_location_for_image_fn": exif_location_for_image,
-}
+LOCATION_FOR_PATH_FLOW_KWARGS = location_for_path_flow_kwargs(
+    exif_location_for_image_fn=exif_location_for_image,
+)
 
-FORMAT_LOCATION_FLOW_KWARGS = {
-    "decimal_to_dms_fn": decimal_to_dms,
-    "location_format_needs_reverse_lookup_fn": location_format_needs_reverse_lookup,
-}
+FORMAT_LOCATION_FLOW_KWARGS = format_location_flow_kwargs(
+    decimal_to_dms_fn=decimal_to_dms,
+    location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
+)
 
-EFFECTIVE_LOCATION_FORMAT_FLOW_KWARGS = {
-    "location_format_options": LOCATION_FORMAT_OPTIONS,
-}
+EFFECTIVE_LOCATION_FORMAT_FLOW_KWARGS = effective_location_format_flow_kwargs(
+    location_format_options=LOCATION_FORMAT_OPTIONS,
+)
 
-LOCATION_LOOKUP_STATUS_FLOW_KWARGS = {
-    "location_format_needs_reverse_lookup_fn": location_format_needs_reverse_lookup,
-}
+LOCATION_LOOKUP_STATUS_FLOW_KWARGS = location_lookup_status_flow_kwargs(
+    location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
+)
 
-UPDATE_LOCATION_STATUS_FLOW_KWARGS = {
-    "table_col_location": TABLE_COL_LOCATION,
-}
+UPDATE_LOCATION_STATUS_FLOW_KWARGS = update_location_status_flow_kwargs(
+    table_col_location=TABLE_COL_LOCATION,
+)
 
-IMAGE_SETTINGS_FOR_PATH_FLOW_KWARGS = {
-    "normalize_rotation_degrees_fn": normalize_rotation_degrees,
-    "per_image_location_stamp_overrides": PER_IMAGE_LOCATION_STAMP_OVERRIDES,
-}
+IMAGE_SETTINGS_FOR_PATH_FLOW_KWARGS = image_settings_for_path_flow_kwargs(
+    normalize_rotation_degrees_fn=normalize_rotation_degrees,
+    per_image_location_stamp_overrides=PER_IMAGE_LOCATION_STAMP_OVERRIDES,
+)
 
-IMAGE_DIMENSIONS_FLOW_KWARGS = {
-    "original_metadata_path_for_image_fn": original_metadata_path_for_image,
-    "load_image_as_rgb_fn": load_image_as_rgb,
-}
+IMAGE_DIMENSIONS_FLOW_KWARGS = image_dimensions_flow_kwargs(
+    original_metadata_path_for_image_fn=original_metadata_path_for_image,
+    load_image_as_rgb_fn=load_image_as_rgb,
+)
 
-PATH_NEEDS_CROP_FLOW_KWARGS = {
-    "normalize_rotation_degrees_fn": normalize_rotation_degrees,
-    "parse_ratio_pair_fn": parse_ratio_pair,
-    "ratios_match_either_orientation_fn": ratios_match_either_orientation,
-}
+PATH_NEEDS_CROP_FLOW_KWARGS = path_needs_crop_flow_kwargs(
+    normalize_rotation_degrees_fn=normalize_rotation_degrees,
+    parse_ratio_pair_fn=parse_ratio_pair,
+    ratios_match_either_orientation_fn=ratios_match_either_orientation,
+)
 
-DATE_USED_AND_SOURCE_FLOW_KWARGS = {
-    "parse_datetime_override_fn": parse_datetime_override,
-    "exif_datetime_for_image_fn": exif_datetime_for_image,
-    "parse_datetime_from_filename_fn": parse_datetime_from_filename,
-}
+DATE_USED_AND_SOURCE_FLOW_KWARGS = date_used_and_source_flow_kwargs(
+    parse_datetime_override_fn=parse_datetime_override,
+    exif_datetime_for_image_fn=exif_datetime_for_image,
+    parse_datetime_from_filename_fn=parse_datetime_from_filename,
+)
 
-CURRENT_TABLE_METADATA_BATCH_SIZE_FLOW_KWARGS = {
-    "scroll_window_seconds": TABLE_METADATA_SCROLL_WINDOW_SECONDS,
-    "batch_size_scrolling": TABLE_METADATA_BATCH_SIZE_SCROLLING,
-    "batch_size_idle": TABLE_METADATA_BATCH_SIZE_IDLE,
-}
+CURRENT_TABLE_METADATA_BATCH_SIZE_FLOW_KWARGS = (
+    current_table_metadata_batch_size_flow_kwargs(
+        scroll_window_seconds=TABLE_METADATA_SCROLL_WINDOW_SECONDS,
+        batch_size_scrolling=TABLE_METADATA_BATCH_SIZE_SCROLLING,
+        batch_size_idle=TABLE_METADATA_BATCH_SIZE_IDLE,
+    )
+)
 
-PROCESS_TABLE_METADATA_BATCH_FLOW_KWARGS = {
-    "table_col_date_used": TABLE_COL_DATE_USED,
-    "table_col_location": TABLE_COL_LOCATION,
-    "table_col_aspect": TABLE_COL_ASPECT,
-    "scroll_window_seconds": TABLE_METADATA_SCROLL_WINDOW_SECONDS,
-    "batch_size_scrolling": TABLE_METADATA_BATCH_SIZE_SCROLLING,
-    "batch_size_idle": TABLE_METADATA_BATCH_SIZE_IDLE,
-}
+PROCESS_TABLE_METADATA_BATCH_FLOW_KWARGS = process_table_metadata_batch_flow_kwargs(
+    table_col_date_used=TABLE_COL_DATE_USED,
+    table_col_location=TABLE_COL_LOCATION,
+    table_col_aspect=TABLE_COL_ASPECT,
+    scroll_window_seconds=TABLE_METADATA_SCROLL_WINDOW_SECONDS,
+    batch_size_scrolling=TABLE_METADATA_BATCH_SIZE_SCROLLING,
+    batch_size_idle=TABLE_METADATA_BATCH_SIZE_IDLE,
+)
 
 
 class MainWindow(QMainWindow):
