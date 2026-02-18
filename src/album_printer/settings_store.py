@@ -38,6 +38,7 @@ PROJECT_SETTING_KEYS = [
     "stamp_border_color",
     "stamp_vertical",
     "stamp_adaptive_text",
+    "adaptive_luminance_threshold",
     "location_stamp_mode",
     "location_format",
     "location_format_template",
@@ -186,6 +187,19 @@ def load_app_project_settings(
             values["stamp_adaptive_text"],
         ),
         bool(values["stamp_adaptive_text"]),
+    )
+    values["adaptive_luminance_threshold"] = max(
+        0,
+        min(
+            255,
+            _as_int(
+                settings.value(
+                    "settings/adaptive_luminance_threshold",
+                    values["adaptive_luminance_threshold"],
+                ),
+                int(values["adaptive_luminance_threshold"]),
+            ),
+        ),
     )
 
     location_stamp_mode = str(

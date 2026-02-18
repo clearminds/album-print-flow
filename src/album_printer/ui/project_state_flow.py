@@ -22,6 +22,7 @@ def current_project_settings_payload(window: Any) -> dict[str, object]:
         "stamp_border_color": window.stamp_border_color_value,
         "stamp_vertical": window.stamp_vertical_value,
         "stamp_adaptive_text": window.stamp_adaptive_text_value,
+        "adaptive_luminance_threshold": window.adaptive_luminance_threshold_value,
         "location_stamp_mode": window.location_stamp_mode_value,
         "location_format": window.location_format_value,
         "location_corner_landscape": window.location_corner_landscape_value,
@@ -69,6 +70,7 @@ def load_app_project_settings(
         "stamp_border_color": window.stamp_border_color_value,
         "stamp_vertical": window.stamp_vertical_value,
         "stamp_adaptive_text": window.stamp_adaptive_text_value,
+        "adaptive_luminance_threshold": window.adaptive_luminance_threshold_value,
         "location_stamp_mode": window.location_stamp_mode_value,
         "location_format": window.location_format_value,
         "location_format_template": window.location_format_template_value,
@@ -111,6 +113,9 @@ def load_app_project_settings(
     window.stamp_border_color_value = str(values["stamp_border_color"])
     window.stamp_vertical_value = bool(values["stamp_vertical"])
     window.stamp_adaptive_text_value = bool(values["stamp_adaptive_text"])
+    window.adaptive_luminance_threshold_value = int(
+        values["adaptive_luminance_threshold"]
+    )
     window.location_stamp_mode_value = str(values["location_stamp_mode"])
     window.location_format_value = str(values["location_format"])
     window.location_format_template_value = str(values["location_format_template"])
@@ -153,6 +158,7 @@ def save_app_project_settings(
             "stamp_border_color": window.stamp_border_color_value,
             "stamp_vertical": window.stamp_vertical_value,
             "stamp_adaptive_text": window.stamp_adaptive_text_value,
+            "adaptive_luminance_threshold": window.adaptive_luminance_threshold_value,
             "location_stamp_mode": window.location_stamp_mode_value,
             "location_format": window.location_format_value,
             "location_format_template": window.location_format_template_value,

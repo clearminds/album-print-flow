@@ -24,6 +24,7 @@ class ProcessingSettings:
     stamp_border_color: str = "#000000"
     stamp_vertical: bool = False
     stamp_adaptive_text: bool = False
+    adaptive_luminance_threshold: int = 128
     datetime_override: datetime | None = None
     location_text: str = ""
     location_stamp_enabled: bool = False

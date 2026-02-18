@@ -130,6 +130,7 @@ def open_project_settings_dialog(
         "stamp_offset_y_px": window.stamp_offset_y_px,
         "stamp_vertical_value": window.stamp_vertical_value,
         "stamp_adaptive_text_value": window.stamp_adaptive_text_value,
+        "adaptive_luminance_threshold_value": window.adaptive_luminance_threshold_value,
         "stamp_color_value": window.stamp_color_value,
         "stamp_border_color_value": window.stamp_border_color_value,
         "location_stamp_scale_percent": window.location_stamp_scale_percent,
@@ -513,6 +514,33 @@ def open_project_settings_dialog(
     stamp_vertical_checkbox.setChecked(window.stamp_vertical_value)
     stamp_adaptive_text_checkbox = QCheckBox("Adaptive Text", dialog)
     stamp_adaptive_text_checkbox.setChecked(window.stamp_adaptive_text_value)
+    adaptive_threshold_slider = QSlider(Qt.Orientation.Horizontal, dialog)
+    adaptive_threshold_slider.setRange(0, 255)
+    adaptive_threshold_slider.setValue(window.adaptive_luminance_threshold_value)
+    adaptive_threshold_label = QLabel(
+        str(window.adaptive_luminance_threshold_value),
+        dialog,
+    )
+    adaptive_threshold_spin = QSpinBox(dialog)
+    adaptive_threshold_spin.setRange(0, 255)
+    adaptive_threshold_spin.setValue(window.adaptive_luminance_threshold_value)
+    adaptive_threshold_slider.valueChanged.connect(
+        lambda value: adaptive_threshold_label.setText(str(value))
+    )
+    adaptive_threshold_slider.valueChanged.connect(
+        lambda value: (
+            adaptive_threshold_spin.blockSignals(True),
+            adaptive_threshold_spin.setValue(value),
+            adaptive_threshold_spin.blockSignals(False),
+        )
+    )
+    adaptive_threshold_spin.valueChanged.connect(adaptive_threshold_slider.setValue)
+    adaptive_threshold_row = QWidget(dialog)
+    adaptive_threshold_layout = QHBoxLayout(adaptive_threshold_row)
+    adaptive_threshold_layout.setContentsMargins(0, 0, 0, 0)
+    adaptive_threshold_layout.addWidget(adaptive_threshold_slider)
+    adaptive_threshold_layout.addWidget(adaptive_threshold_label)
+    adaptive_threshold_layout.addWidget(adaptive_threshold_spin)
 
     stamp_color_button = QPushButton(dialog)
     stamp_color_reset_button = QPushButton("Reset", dialog)
@@ -790,6 +818,7 @@ def open_project_settings_dialog(
         window.stamp_offset_y_px = stamp_offset_y_slider.value()
         window.stamp_vertical_value = stamp_vertical_checkbox.isChecked()
         window.stamp_adaptive_text_value = stamp_adaptive_text_checkbox.isChecked()
+        window.adaptive_luminance_threshold_value = adaptive_threshold_slider.value()
         window.stamp_color_value = stamp_color_value
         window.stamp_border_color_value = stamp_border_color_value
         window.refresh_preview()
@@ -864,6 +893,7 @@ def open_project_settings_dialog(
             stamp_border_color=stamp_border_color_value,
             stamp_vertical=stamp_vertical_checkbox.isChecked(),
             stamp_adaptive_text=stamp_adaptive_text_checkbox.isChecked(),
+            adaptive_luminance_threshold=adaptive_threshold_slider.value(),
             datetime_override=preview_datetime,
         )
         image = apply_stamp_fn(image, stamp_text_value, settings_preview)
@@ -982,14 +1012,17 @@ def open_project_settings_dialog(
 
     def update_adaptive_control_states() -> None:
         timestamp_manual_controls_enabled = not stamp_adaptive_text_checkbox.isChecked()
-        stamp_color_row.setEnabled(timestamp_manual_controls_enabled)
-        stamp_border_color_row.setEnabled(timestamp_manual_controls_enabled)
+        form.setRowVisible(stamp_color_row, timestamp_manual_controls_enabled)
+        form.setRowVisible(stamp_border_color_row, timestamp_manual_controls_enabled)
 
         location_manual_controls_enabled = (
             not location_stamp_adaptive_text_checkbox.isChecked()
         )
-        location_stamp_color_row.setEnabled(location_manual_controls_enabled)
-        location_stamp_border_color_row.setEnabled(location_manual_controls_enabled)
+        form.setRowVisible(location_stamp_color_row, location_manual_controls_enabled)
+        form.setRowVisible(
+            location_stamp_border_color_row,
+            location_manual_controls_enabled,
+        )
 
     crop_ratio_combo.currentIndexChanged.connect(
         lambda _value: apply_dialog_preview_values()
@@ -1053,6 +1086,9 @@ def open_project_settings_dialog(
     )
     stamp_adaptive_text_checkbox.toggled.connect(
         lambda _checked: apply_dialog_preview_values()
+    )
+    adaptive_threshold_slider.valueChanged.connect(
+        lambda _value: apply_dialog_preview_values()
     )
     stamp_adaptive_text_checkbox.toggled.connect(
         lambda _checked: update_adaptive_control_states()
@@ -1189,6 +1225,7 @@ def open_project_settings_dialog(
     form.addRow("Timestamp Offset Y", stamp_offset_y_row)
     form.addRow("Text Direction", stamp_vertical_checkbox)
     form.addRow("Adaptive Text", stamp_adaptive_text_checkbox)
+    form.addRow("Adaptive Threshold", adaptive_threshold_row)
     form.addRow("Timestamp Color", stamp_color_row)
     form.addRow("Timestamp Border", stamp_border_color_row)
     form.addRow(section_label("Location Stamp"), QLabel("", dialog))
@@ -1267,6 +1304,9 @@ def open_project_settings_dialog(
         window.stamp_adaptive_text_value = bool(
             original_values["stamp_adaptive_text_value"]
         )
+        window.adaptive_luminance_threshold_value = int(
+            original_values["adaptive_luminance_threshold_value"]
+        )
         window.stamp_color_value = str(original_values["stamp_color_value"])
         window.stamp_border_color_value = str(
             original_values["stamp_border_color_value"]
@@ -1303,6 +1343,7 @@ def open_project_settings_dialog(
     window.stamp_offset_y_px = stamp_offset_y_slider.value()
     window.stamp_vertical_value = stamp_vertical_checkbox.isChecked()
     window.stamp_adaptive_text_value = stamp_adaptive_text_checkbox.isChecked()
+    window.adaptive_luminance_threshold_value = adaptive_threshold_slider.value()
     window.stamp_color_value = stamp_color_value
     window.stamp_border_color_value = stamp_border_color_value
 

@@ -176,6 +176,8 @@ def apply_stamp(
             text_mask = text_mask.rotate(90, expand=True)
 
         sample_region = image.crop((x, y, x + stamp_w, y + stamp_h)).convert("L")
+        adaptive_threshold = int(getattr(settings, "adaptive_luminance_threshold", 128))
+        adaptive_threshold = max(0, min(255, adaptive_threshold))
         text_layer = Image.new("RGBA", (stamp_w, stamp_h), (0, 0, 0, 0))
         cursor_x = -left
         for char in text:
@@ -196,7 +198,7 @@ def apply_stamp(
             char_mask_crop = char_mask.crop(char_bbox)
             char_sample_crop = sample_region.crop(char_bbox)
             mean_luma = float(ImageStat.Stat(char_sample_crop, char_mask_crop).mean[0])
-            if mean_luma < 128.0:
+            if mean_luma < float(adaptive_threshold):
                 glyph_rgb = (255, 255, 255)
                 border_rgb = (0, 0, 0)
             else:
@@ -204,7 +206,7 @@ def apply_stamp(
                 border_rgb = (255, 255, 255)
 
             border_mask = ImageChops.subtract(
-                char_mask.filter(ImageFilter.MaxFilter(3)),
+                char_mask.filter(ImageFilter.MaxFilter(5)),
                 char_mask,
             )
             border_mask_crop = border_mask.crop(char_bbox)
