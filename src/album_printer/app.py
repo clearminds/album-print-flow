@@ -32,8 +32,6 @@ from album_printer.app_constants import (
     LOG_LEVEL_RANK,
     LOG_LEVELS,
     NOMINATIM_AUTH_MODES,
-    NOMINATIM_CACHE_FILENAME,
-    NOMINATIM_CACHE_MAX_ENTRIES,
     NOMINATIM_DEFAULT_RATE_LIMIT_SECONDS,
     NOMINATIM_DEFAULT_REVERSE_URL,
     NOMINATIM_ZOOM_LEVEL_OPTIONS,
@@ -117,9 +115,6 @@ from album_printer.ipp_backend import (
     IppCapabilities,
     get_ipp_capabilities,
     print_jobs_via_ipp,
-)
-from album_printer.location.nominatim_service import (
-    reverse_geocode_nominatim as reverse_geocode_nominatim_service,
 )
 from album_printer.printing.flows.dispatch import (
     execute_print_paths as execute_print_paths_flow,
@@ -356,16 +351,7 @@ from album_printer.ui.custom_location_text_flow import (
     current_custom_location_text as current_custom_location_text_flow,
 )
 from album_printer.ui.custom_location_text_flow import (
-    load_custom_location_text_history as load_custom_location_text_history_flow,
-)
-from album_printer.ui.custom_location_text_flow import (
     refresh_custom_location_text_options as refresh_custom_location_text_options_flow,
-)
-from album_printer.ui.custom_location_text_flow import (
-    register_custom_location_text as register_custom_location_text_flow,
-)
-from album_printer.ui.custom_location_text_flow import (
-    save_custom_location_text_history as save_custom_location_text_history_flow,
 )
 from album_printer.ui.datetime_override_flow import (
     clear_datetime_override_for_selected as clear_datetime_override_for_selected_flow,
@@ -540,6 +526,48 @@ from album_printer.ui.main_window_data_entrypoints import (
 from album_printer.ui.main_window_data_entrypoints import (
     update_location_status_for_path as update_location_status_for_path_entrypoint,
 )
+from album_printer.ui.main_window_location_entrypoints import (
+    format_nominatim_geocodejson as format_nominatim_geocodejson_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    load_custom_location_text_history as load_custom_location_text_history_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    load_nominatim_cache as load_nominatim_cache_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    load_nominatim_settings as load_nominatim_settings_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    nominatim_cache_key as nominatim_cache_key_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    nominatim_cache_path as nominatim_cache_path_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    nominatim_cache_root as nominatim_cache_root_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    nominatim_payload_cache_key as nominatim_payload_cache_key_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    nominatim_user_agent as nominatim_user_agent_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    register_custom_location_text as register_custom_location_text_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    reverse_geocode_nominatim as reverse_geocode_nominatim_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    save_custom_location_text_history as save_custom_location_text_history_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    save_nominatim_cache as save_nominatim_cache_entrypoint,
+)
+from album_printer.ui.main_window_location_entrypoints import (
+    save_nominatim_settings as save_nominatim_settings_entrypoint,
+)
 from album_printer.ui.main_window_startup import initialize_main_window
 from album_printer.ui.main_window_storage_entrypoints import (
     append_log as append_log_entrypoint,
@@ -647,39 +675,6 @@ from album_printer.ui.main_window_storage_entrypoints import (
     update_source_metadata_for_assets as update_source_metadata_for_assets_entrypoint,
 )
 from album_printer.ui.menu_flow import setup_menu as setup_menu_flow
-from album_printer.ui.nominatim_settings_flow import (
-    format_nominatim_geocodejson as format_nominatim_geocodejson_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    load_nominatim_cache as load_nominatim_cache_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    load_nominatim_settings as load_nominatim_settings_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    nominatim_cache_key as nominatim_cache_key_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    nominatim_cache_path as nominatim_cache_path_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    nominatim_cache_root as nominatim_cache_root_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    nominatim_payload_cache_key as nominatim_payload_cache_key_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    nominatim_user_agent as nominatim_user_agent_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    reverse_geocode_nominatim as reverse_geocode_nominatim_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    save_nominatim_cache as save_nominatim_cache_flow,
-)
-from album_printer.ui.nominatim_settings_flow import (
-    save_nominatim_settings as save_nominatim_settings_flow,
-)
 from album_printer.ui.photo_entry_flow import (
     cached_table_values_for_path as cached_table_values_for_path_flow,
 )
@@ -958,44 +953,34 @@ class MainWindow(QMainWindow):
         )
 
     def load_custom_location_text_history(self) -> None:
-        load_custom_location_text_history_flow(self)
+        load_custom_location_text_history_entrypoint(self)
 
     def save_custom_location_text_history(self) -> None:
-        save_custom_location_text_history_flow(self)
+        save_custom_location_text_history_entrypoint(self)
 
     def register_custom_location_text(self, text: str) -> None:
-        register_custom_location_text_flow(self, text)
+        register_custom_location_text_entrypoint(self, text)
 
     def nominatim_cache_root(self) -> Path:
-        return nominatim_cache_root_flow(self, settings_org=SETTINGS_ORG)
+        return nominatim_cache_root_entrypoint(self)
 
     def nominatim_cache_path(self) -> Path:
-        return nominatim_cache_path_flow(
-            self,
-            nominatim_cache_filename=NOMINATIM_CACHE_FILENAME,
-        )
+        return nominatim_cache_path_entrypoint(self)
 
     def load_nominatim_settings(self) -> None:
-        load_nominatim_settings_flow(
-            self,
-            nominatim_auth_modes=NOMINATIM_AUTH_MODES,
-            nominatim_default_rate_limit_seconds=NOMINATIM_DEFAULT_RATE_LIMIT_SECONDS,
-        )
+        load_nominatim_settings_entrypoint(self)
 
     def save_nominatim_settings(self) -> None:
-        save_nominatim_settings_flow(self)
+        save_nominatim_settings_entrypoint(self)
 
     def load_nominatim_cache(self) -> None:
-        load_nominatim_cache_flow(self)
+        load_nominatim_cache_entrypoint(self)
 
     def save_nominatim_cache(self) -> None:
-        save_nominatim_cache_flow(
-            self,
-            nominatim_cache_max_entries=NOMINATIM_CACHE_MAX_ENTRIES,
-        )
+        save_nominatim_cache_entrypoint(self)
 
     def nominatim_user_agent(self) -> str:
-        return nominatim_user_agent_flow(self, app_version_fn=app_version)
+        return nominatim_user_agent_entrypoint(self)
 
     def nominatim_cache_key(
         self,
@@ -1003,7 +988,7 @@ class MainWindow(QMainWindow):
         longitude: float,
         format_value: str | None = None,
     ) -> str:
-        return nominatim_cache_key_flow(
+        return nominatim_cache_key_entrypoint(
             self,
             latitude,
             longitude,
@@ -1015,7 +1000,7 @@ class MainWindow(QMainWindow):
         latitude: float,
         longitude: float,
     ) -> str:
-        return nominatim_payload_cache_key_flow(
+        return nominatim_payload_cache_key_entrypoint(
             self,
             latitude,
             longitude,
@@ -1026,14 +1011,7 @@ class MainWindow(QMainWindow):
         payload: object,
         format_value: str | None = None,
     ) -> str:
-        return format_nominatim_geocodejson_flow(
-            self,
-            payload,
-            format_value,
-            normalized_geocodejson_geocoding_fn=_normalized_geocodejson_geocoding,
-            normalized_geocodejson_feature_fn=_normalized_geocodejson_feature,
-            render_location_template_fn=render_location_template,
-        )
+        return format_nominatim_geocodejson_entrypoint(self, payload, format_value)
 
     def reverse_geocode_nominatim(
         self,
@@ -1041,12 +1019,11 @@ class MainWindow(QMainWindow):
         path: Path | None = None,
         format_value: str | None = None,
     ) -> str:
-        return reverse_geocode_nominatim_flow(
+        return reverse_geocode_nominatim_entrypoint(
             self,
             location,
             path=path,
             format_value=format_value,
-            reverse_geocode_nominatim_service_fn=reverse_geocode_nominatim_service,
         )
 
     def borderless_enabled(self) -> bool:
