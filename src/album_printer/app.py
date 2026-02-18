@@ -256,12 +256,6 @@ from album_printer.sources.flows.album_url import (
     handle_process_album_sync_live_snapshot,
     handle_source_load_finished,
 )
-from album_printer.sources.flows.folder_metadata import (
-    load_folder_metadata as load_folder_metadata_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    save_folder_metadata as save_folder_metadata_flow,
-)
 from album_printer.sources.flows.load import (
     handle_load_folder,
     handle_load_folder_path,
@@ -451,19 +445,6 @@ from album_printer.ui.image_settings_flow import (
 from album_printer.ui.image_settings_flow import (
     sync_image_settings_with_files as sync_image_settings_with_files_flow,
 )
-from album_printer.ui.image_table_flow import (
-    append_image_rows as append_image_rows_flow,
-)
-from album_printer.ui.image_table_flow import (
-    populate_image_table_row as populate_image_table_row_flow,
-)
-from album_printer.ui.image_table_flow import (
-    rebuild_image_row_lookup as rebuild_image_row_lookup_flow,
-)
-from album_printer.ui.image_table_flow import (
-    refresh_image_list_labels as refresh_image_list_labels_flow,
-)
-from album_printer.ui.image_table_flow import row_for_path as row_for_path_flow
 from album_printer.ui.image_transform_flow import (
     reset_selected_image_rotation as reset_selected_image_rotation_flow,
 )
@@ -493,6 +474,15 @@ from album_printer.ui.log_console_flow import (
     thread_safe_append_log as thread_safe_append_log_flow,
 )
 from album_printer.ui.main_window_data_entrypoints import (
+    append_image_rows as append_image_rows_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    apply_sort_order as apply_sort_order_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    apply_table_sort as apply_table_sort_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
     current_table_metadata_batch_size as current_table_metadata_batch_size_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
@@ -500,6 +490,9 @@ from album_printer.ui.main_window_data_entrypoints import (
 )
 from album_printer.ui.main_window_data_entrypoints import (
     effective_location_format_for_path as effective_location_format_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    enqueue_table_metadata_for_paths as enqueue_table_metadata_for_paths_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
     format_location as format_location_entrypoint,
@@ -514,22 +507,55 @@ from album_printer.ui.main_window_data_entrypoints import (
     image_settings_for_path as image_settings_for_path_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
+    load_folder_metadata as load_folder_metadata_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
     location_for_path as location_for_path_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
     location_lookup_status_for_path as location_lookup_status_for_path_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
+    note_table_scrolled as note_table_scrolled_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    on_image_table_header_clicked as on_image_table_header_clicked_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
     path_needs_crop_for_aspect as path_needs_crop_for_aspect_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    populate_image_table_row as populate_image_table_row_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
     process_table_metadata_batch as process_table_metadata_batch_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
+    rebuild_image_row_lookup as rebuild_image_row_lookup_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
     refresh_gps_resolution_progress as refresh_gps_resolution_progress_entrypoint,
 )
 from album_printer.ui.main_window_data_entrypoints import (
+    refresh_image_list_labels as refresh_image_list_labels_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    row_for_path as row_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    save_folder_metadata as save_folder_metadata_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    sort_key_for_path as sort_key_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    start_table_metadata_resolution as start_table_metadata_resolution_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
     update_location_status_for_path as update_location_status_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    update_table_sort_indicator as update_table_sort_indicator_entrypoint,
 )
 from album_printer.ui.main_window_location_entrypoints import (
     format_nominatim_geocodejson as format_nominatim_geocodejson_entrypoint,
@@ -727,24 +753,7 @@ from album_printer.ui.project_state_flow import (
 from album_printer.ui.project_state_flow import selected_path as selected_path_flow
 from album_printer.ui.status_presenter import present_status, present_status_and_log
 from album_printer.ui.table_metadata_flow import (
-    enqueue_table_metadata_for_paths as enqueue_table_metadata_for_paths_flow,
-)
-from album_printer.ui.table_metadata_flow import (
-    note_table_scrolled as note_table_scrolled_flow,
-)
-from album_printer.ui.table_metadata_flow import (
-    start_table_metadata_resolution as start_table_metadata_resolution_flow,
-)
-from album_printer.ui.table_metadata_flow import (
     toggle_table_metadata_pause as toggle_table_metadata_pause_flow,
-)
-from album_printer.ui.table_sort_flow import apply_table_sort as apply_table_sort_flow
-from album_printer.ui.table_sort_flow import (
-    on_image_table_header_clicked as on_image_table_header_clicked_flow,
-)
-from album_printer.ui.table_sort_flow import sort_key_for_path as sort_key_for_path_flow
-from album_printer.ui.table_sort_flow import (
-    update_table_sort_indicator as update_table_sort_indicator_flow,
 )
 from album_printer.ui.thumbnail_cache_flow import (
     start_thumbnail_generation as start_thumbnail_generation_flow,
@@ -756,7 +765,6 @@ from album_printer.ui.thumbnail_worker_flow import (
 from album_printer.ui.thumbnail_worker_flow import (
     on_thumbnail_ready as on_thumbnail_ready_flow,
 )
-from album_printer.ui.window_event_flow import apply_sort_order as apply_sort_order_flow
 from album_printer.ui.window_event_flow import close_event as close_event_flow
 from album_printer.ui.window_event_flow import (
     on_image_table_cell_changed as on_image_table_cell_changed_flow,
@@ -1124,10 +1132,10 @@ class MainWindow(QMainWindow):
         update_location_status_for_path_entrypoint(self, path)
 
     def rebuild_image_row_lookup(self) -> None:
-        rebuild_image_row_lookup_flow(self)
+        rebuild_image_row_lookup_entrypoint(self)
 
     def row_for_path(self, path: Path) -> int | None:
-        return row_for_path_flow(self, path)
+        return row_for_path_entrypoint(self, path)
 
     def sync_global_source_state_from_path(self, path: Path) -> None:
         sync_global_source_state_from_path_entrypoint(self, path)
@@ -1494,10 +1502,10 @@ class MainWindow(QMainWindow):
         )
 
     def start_table_metadata_resolution(self) -> None:
-        start_table_metadata_resolution_flow(self)
+        start_table_metadata_resolution_entrypoint(self)
 
     def note_table_scrolled(self) -> None:
-        note_table_scrolled_flow(self)
+        note_table_scrolled_entrypoint(self)
 
     def current_table_metadata_batch_size(self) -> int:
         return current_table_metadata_batch_size_entrypoint(self)
@@ -1506,71 +1514,37 @@ class MainWindow(QMainWindow):
         process_table_metadata_batch_entrypoint(self)
 
     def refresh_image_list_labels(self, preferred_path: Path | None = None) -> None:
-        refresh_image_list_labels_flow(
-            self,
-            preferred_path,
-            table_col_file=TABLE_COL_FILE,
-            reset_paused=False,
-        )
+        refresh_image_list_labels_entrypoint(self, preferred_path)
 
     def populate_image_table_row(self, row: int, path: Path) -> None:
-        populate_image_table_row_flow(
-            self,
-            row,
-            path,
-            table_col_thumb=TABLE_COL_THUMB,
-            table_col_state=TABLE_COL_STATE,
-            table_col_print=TABLE_COL_PRINT,
-            table_col_file=TABLE_COL_FILE,
-            table_col_date_used=TABLE_COL_DATE_USED,
-            table_col_location=TABLE_COL_LOCATION,
-            table_col_aspect=TABLE_COL_ASPECT,
-        )
+        populate_image_table_row_entrypoint(self, row, path)
 
     def enqueue_table_metadata_for_paths(self, paths: list[Path]) -> None:
-        enqueue_table_metadata_for_paths_flow(self, paths)
+        enqueue_table_metadata_for_paths_entrypoint(self, paths)
 
     def append_image_rows(self, paths: list[Path]) -> None:
-        append_image_rows_flow(
-            self,
-            paths,
-            thumbnail_ui_cache_warmup_max=THUMBNAIL_UI_CACHE_WARMUP_MAX,
-            table_col_thumb=TABLE_COL_THUMB,
-        )
+        append_image_rows_entrypoint(self, paths)
 
     def update_table_sort_indicator(self) -> None:
-        update_table_sort_indicator_flow(self)
+        update_table_sort_indicator_entrypoint(self)
 
     def sort_key_for_path(self, path: Path, column: int) -> object:
-        return sort_key_for_path_flow(
-            self,
-            path,
-            column,
-            table_col_file=TABLE_COL_FILE,
-            table_col_date_used=TABLE_COL_DATE_USED,
-            table_col_aspect=TABLE_COL_ASPECT,
-        )
+        return sort_key_for_path_entrypoint(self, path, column)
 
     def apply_table_sort(self, preferred_path: Path | None = None) -> None:
-        apply_table_sort_flow(
-            self,
-            preferred_path,
-            table_col_file=TABLE_COL_FILE,
-            table_col_date_used=TABLE_COL_DATE_USED,
-            table_col_aspect=TABLE_COL_ASPECT,
-        )
+        apply_table_sort_entrypoint(self, preferred_path)
 
     def on_image_table_header_clicked(self, column: int) -> None:
-        on_image_table_header_clicked_flow(self, column)
+        on_image_table_header_clicked_entrypoint(self, column)
 
     def apply_sort_order(self, preferred_path: Path | None = None) -> None:
-        apply_sort_order_flow(self, preferred_path)
+        apply_sort_order_entrypoint(self, preferred_path)
 
     def load_folder_metadata(self) -> None:
-        load_folder_metadata_flow(self)
+        load_folder_metadata_entrypoint(self)
 
     def save_folder_metadata(self) -> None:
-        save_folder_metadata_flow(self)
+        save_folder_metadata_entrypoint(self)
 
     def restore_image_settings_for_selected(self) -> None:
         restore_image_settings_for_selected_flow(
