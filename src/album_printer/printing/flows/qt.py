@@ -5,9 +5,33 @@ from pathlib import Path
 from typing import Any
 
 from PIL.ImageQt import ImageQt
-from PySide6.QtCore import QMarginsF, QSizeF, Qt
-from PySide6.QtGui import QImage, QPageLayout, QPageSize, QPainter, QPixmap
+from PySide6.QtCore import QMarginsF, QRect, QSizeF, Qt
+from PySide6.QtGui import (
+    QImage,
+    QPageLayout,
+    QPageSize,
+    QPainter,
+    QPixmap,
+    QTransform,
+)
 from PySide6.QtPrintSupport import QPrinter
+
+
+def _page_size_for_qt(paper_value: str, width_mm: float, height_mm: float) -> QPageSize:
+    """Build QPageSize; use standard Id when possible so Windows driver selects that paper."""
+    standard_ids = {
+        "A4": QPageSize.PageSizeId.A4,
+        "A3": QPageSize.PageSizeId.A3,
+        "A4+": QPageSize.PageSizeId.A4Plus,
+    }
+    page_id = standard_ids.get(paper_value)
+    if page_id is not None:
+        return QPageSize(page_id)
+    return QPageSize(
+        QSizeF(width_mm, height_mm),
+        QPageSize.Unit.Millimeter,
+        paper_value,
+    )
 
 
 def print_all_via_qt(
@@ -49,26 +73,70 @@ def print_all_via_qt(
                 f"'{window.cups_media_value}', using fallback '{window.paper_value}'",
             )
 
-    # Use a fixed resolution so layout-based pixel rect matches the paint device
-    # (on Windows, pageRect(DevicePixel) can be wrong or not match our page size)
-    resolution = 300
-    printer.setResolution(resolution)
     printer.setFullPage(borderless)
-    page_size = QPageSize(
-        QSizeF(width_mm, height_mm), QPageSize.Unit.Millimeter, page_name
+    page_size = _page_size_for_qt(page_name, width_mm, height_mm)
+    orientation = getattr(
+        window, "print_orientation_value", "Portrait"
+    ).strip()
+    qt_orientation = (
+        QPageLayout.Orientation.Landscape
+        if orientation == "Landscape"
+        else QPageLayout.Orientation.Portrait
     )
-    margins = QMarginsF(0, 0, 0, 0) if borderless else QMarginsF(5, 5, 5, 5)
+    # Use zero margins so the image uses the full page
+    margins = QMarginsF(0, 0, 0, 0)
     layout = QPageLayout(
         page_size,
-        QPageLayout.Orientation.Portrait,
+        qt_orientation,
         margins,
         QPageLayout.Unit.Millimeter,
     )
     printer.setPageLayout(layout)
 
-    # Use the layout's paint rect in pixels so coordinates match our page size
-    # (critical on Windows where driver may not report pageRect correctly)
-    page_rect = layout.paintRectPixels(resolution)
+    # Use the printer's actual resolution so our draw coordinates match the device.
+    # If we used a fixed 300 DPI but the driver uses 600+, only part of the image
+    # would appear (e.g. top-left quarter).
+    resolution = printer.resolution()
+    if resolution <= 0:
+        resolution = 300
+    layout_rect = layout.paintRectPixels(resolution)
+    layout_w = layout_rect.width()
+    layout_h = layout_rect.height()
+
+    def log(msg: str) -> None:
+        window.append_log("DEBUG", msg)
+
+    log(
+        f"Qt page: paper={page_name}, orientation={orientation}, "
+        f"size={width_mm:.1f}x{height_mm:.1f} mm, fullPage={borderless}"
+    )
+    log(f"Qt printer valid={printer.isValid()}, resolution={resolution} DPI")
+    log(f"Qt page rect (layout): {layout_w}x{layout_h} px")
+    # Use the largest draw area we can: when fullPage, use paperRect (full paper)
+    # to avoid white margins on the sides; otherwise use pageRect (printable area).
+    page_rect = layout_rect
+    try:
+        pr_page = printer.pageRect(QPrinter.Unit.DevicePixel)
+        pr_paper = printer.paperRect(QPrinter.Unit.DevicePixel)
+        w_page = int(pr_page.width())
+        h_page = int(pr_page.height())
+        w_paper = int(pr_paper.width())
+        h_paper = int(pr_paper.height())
+        log(f"Qt page rect (printer printable): {w_page}x{h_page} px")
+        log(f"Qt paper rect (printer full): {w_paper}x{h_paper} px")
+        if borderless and w_paper > 0 and h_paper > 0:
+            # Draw to full paper so we don't get white on the sides.
+            page_rect = QRect(
+                int(pr_paper.x()), int(pr_paper.y()), w_paper, h_paper
+            )
+            log(f"Qt using paper rect for draw (fullPage): {page_rect.width()}x{page_rect.height()} px")
+        elif w_page > 0 and h_page > 0:
+            page_rect = QRect(
+                int(pr_page.x()), int(pr_page.y()), w_page, h_page
+            )
+            log(f"Qt using page rect for draw: {page_rect.width()}x{page_rect.height()} px")
+    except Exception:
+        pass
     page_w = page_rect.width()
     page_h = page_rect.height()
     if page_w <= 0 or page_h <= 0:
@@ -104,35 +172,53 @@ def print_all_via_qt(
             pixmap = QPixmap.fromImage(QImage(ImageQt(image)))
 
             target = page_rect
-            if width_mm and height_mm:
-                paper_ratio = width_mm / height_mm
-                page_ratio = page_w / page_h if page_h else 1
-                if not ratios_match_either_orientation_fn(
-                    page_ratio,
-                    width_mm,
-                    height_mm,
-                    tolerance=0.01,
-                ):
-                    if page_ratio > paper_ratio:
-                        target_w = int(page_h * paper_ratio)
-                        x = (page_w - target_w) // 2
-                        target = page_rect.adjusted(x, 0, -(page_w - target_w - x), 0)
-                    else:
-                        target_h = int(page_w / paper_ratio)
-                        y = (page_h - target_h) // 2
-                        target = page_rect.adjusted(0, y, 0, -(page_h - target_h - y))
-
+            tw = target.width()
+            th = target.height()
+            # When fullPage, scale to slightly larger than page (bleed) so driver margins don't show as white.
+            bleed = 1.02 if borderless else 1.0
+            tw_fill = int(round(tw * bleed))
+            th_fill = int(round(th * bleed))
+            pw0 = pixmap.width()
+            ph0 = pixmap.height()
+            # Rotate image to match page orientation so it fills the page better.
+            pw = pw0
+            ph = ph0
+            page_landscape = tw > th
+            image_landscape = pw > ph
+            rotated = page_landscape != image_landscape
+            if rotated:
+                pixmap = pixmap.transformed(
+                    QTransform().rotate(90),
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                pw = pixmap.width()
+                ph = pixmap.height()
+            if pw <= 0 or ph <= 0:
+                continue
+            # Scale to fill the page (and bleed when borderless); image may be cropped at edges.
+            scale = max(tw_fill / pw, th_fill / ph)
+            scaled_w = max(tw_fill, int(round(pw * scale)))
+            scaled_h = max(th_fill, int(round(ph * scale)))
             scaled = pixmap.scaled(
-                int(target.width()),
-                int(target.height()),
+                scaled_w,
+                scaled_h,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
-            x = target.x() + (target.width() - scaled.width()) // 2
-            y = target.y() + (target.height() - scaled.height()) // 2
+            x = target.x() + (tw - scaled.width()) // 2
+            y = target.y() + (th - scaled.height()) // 2
+            painter.save()
+            if not borderless:
+                painter.setClipRect(target)
             painter.drawPixmap(x, y, scaled)
+            painter.restore()
             printed_successfully.append(path)
-            window.append_log("DEBUG", f"Qt queued {path.name}")
+            rot_txt = f" → rotated 90° → {pw}x{ph} px" if rotated else ""
+            bleed_txt = f", bleed={bleed}" if borderless else ""
+            log(
+                f"Qt page {idx + 1} [{path.name}]: image {pw0}x{ph0} px{rot_txt}, "
+                f"scale={scale:.3f}{bleed_txt}, draw {scaled.width()}x{scaled.height()} at ({x},{y})"
+            )
     finally:
         painter.end()
 

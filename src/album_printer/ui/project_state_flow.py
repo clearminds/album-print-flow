@@ -280,6 +280,12 @@ def load_app_print_settings(
     )
     window.borderless_content_scale_percent = max(85, min(110, raw_borderless_scale))
 
+    orientation = str(
+        window.ui_settings.value("print/orientation", window.print_orientation_value)
+    ).strip()
+    if orientation in {"Portrait", "Landscape"}:
+        window.print_orientation_value = orientation
+
 
 def save_app_print_settings(window: Any) -> None:
     window.ui_settings.setValue("print/backend", window.print_backend_value)
@@ -307,6 +313,7 @@ def save_app_print_settings(window: Any) -> None:
         "print/borderless_content_scale_percent",
         window.borderless_content_scale_percent,
     )
+    window.ui_settings.setValue("print/orientation", window.print_orientation_value)
     window.ui_settings.sync()
 
 

@@ -200,6 +200,7 @@ def initialize_main_window_state(
     window.cups_media_key = "media"
     window.cups_media_type_key = "media-type"
     window.cups_print_quality_key = "print-quality"
+    window.print_orientation_value = "Portrait"
 
     window.load_app_print_settings()
     window.load_app_project_settings()

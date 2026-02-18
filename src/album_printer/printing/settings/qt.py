@@ -1,4 +1,4 @@
-"""Qt backend print settings UI (paper size)."""
+"""Qt backend print settings UI (paper size, orientation)."""
 
 from __future__ import annotations
 
@@ -10,13 +10,23 @@ from album_printer.app_constants import PAPER_LABELS
 
 
 def build_paper_section(parent: Any, window: Any) -> dict[str, Any]:
-    """Build Qt-specific paper size combo.
+    """Build Qt-specific paper size and orientation combos.
 
-    Returns a dict with: paper_combo.
+    Returns a dict with: paper_combo, orientation_combo.
     """
     paper_combo = QComboBox(parent)
     for key, label in sorted(PAPER_LABELS.items(), key=lambda p: p[0]):
         paper_combo.addItem(label, key)
     idx = paper_combo.findData(window.paper_value)
     paper_combo.setCurrentIndex(idx if idx >= 0 else 0)
-    return {"paper_combo": paper_combo}
+
+    orientation_combo = QComboBox(parent)
+    orientation_combo.addItem("Portrait", "Portrait")
+    orientation_combo.addItem("Landscape", "Landscape")
+    idx = orientation_combo.findData(window.print_orientation_value)
+    orientation_combo.setCurrentIndex(idx if idx >= 0 else 0)
+    orientation_combo.setToolTip(
+        "Match the orientation set in your printer (or Windows printer preferences)."
+    )
+
+    return {"paper_combo": paper_combo, "orientation_combo": orientation_combo}

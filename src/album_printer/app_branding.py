@@ -123,7 +123,21 @@ def app_window_icon(base_file: Path | None = None) -> QIcon | None:
     path = logo_path(base_file)
     if path is None:
         return None
-    icon = QIcon(str(path))
+    pixmap = QPixmap(str(path))
+    if pixmap.isNull():
+        return None
+    # Provide multiple sizes so Windows uses the correct icon in the taskbar
+    # (it often uses 16x16 or 32x32) as well as in the window title.
+    icon = QIcon()
+    for size in (16, 32, 48, 256):
+        scaled = pixmap.scaled(
+            size,
+            size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        if not scaled.isNull():
+            icon.addPixmap(scaled)
     if icon.isNull():
         return None
     return icon

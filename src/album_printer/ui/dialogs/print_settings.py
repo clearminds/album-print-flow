@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from typing import Any
 
 from PySide6.QtCore import QTimer
@@ -9,6 +11,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -90,6 +93,33 @@ def open_print_settings_dialog(
 
     qt_section = build_paper_section(dialog, window)
     paper_combo = qt_section["paper_combo"]
+    orientation_combo = qt_section["orientation_combo"]
+    if sys.platform == "win32":
+        paper_combo.setToolTip(
+            "On Windows, set the same paper in your printer's preferences "
+            "(e.g. Devices and Printers → printer → Printing preferences), "
+            "or the system default may be used."
+        )
+
+    printer_prefs_btn = QPushButton("Printer preferences…", dialog)
+    printer_prefs_btn.setToolTip(
+        "Open this printer's Windows preferences to set paper type, quality, "
+        "and other options (Qt/Auto printing uses these settings)."
+    )
+
+    windows_paper_notice = QLabel(dialog)
+    windows_paper_notice.setWordWrap(True)
+    windows_paper_notice.setStyleSheet(
+        "font-size: 11pt; color: #1a1a1a; padding: 8px; "
+        "background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 4px;"
+    )
+    windows_paper_notice.setText(
+        "On Windows, the app cannot choose the paper in the printer. "
+        "You must set the same paper size here and in your printer's preferences "
+        "(click \"Printer preferences…\" below), and choose the same size there "
+        "(e.g. 10×15 cm / 4×6 in). If the sizes don't match, the wrong paper may be used "
+        "and the print may not fill the page."
+    )
 
     fetch_status_label = QLabel("Opening dialog…", dialog)
     fetch_status_label.setStyleSheet("color: #9CA3AF;")
@@ -132,6 +162,9 @@ def open_print_settings_dialog(
         nonlocal ipp_printer_name_value
         set_fetch_status("Loading printer capabilities…")
         backend = backend_combo.currentText()
+        if backend == "Auto" and not window.is_cups_available():
+            set_fetch_status("Auto → Qt (CUPS not available)")
+            return
         if backend == "IPP":
             uri = ipp_uri_edit.text().strip()
             caps = ipp_section["fill_combos_from_ipp"](
@@ -164,10 +197,15 @@ def open_print_settings_dialog(
 
     def update_backend_visibility() -> None:
         backend = backend_combo.currentText()
-        show_printer = backend in {"Auto", "CUPS", "IPP", "Qt"}
-        show_ipp = backend == "IPP"
-        show_paper = backend == "Qt"
-        show_cups_options = backend in {"Auto", "CUPS", "IPP"}
+        # Auto: show the same options as whatever would actually be used
+        if backend == "Auto":
+            effective = "CUPS" if window.is_cups_available() else "Qt"
+        else:
+            effective = backend
+        show_printer = effective in {"CUPS", "IPP", "Qt"}
+        show_ipp = effective == "IPP"
+        show_paper = effective == "Qt"
+        show_cups_options = effective in {"CUPS", "IPP"}
 
         def set_row_visible(widget: QWidget, visible: bool) -> None:
             widget.setVisible(visible)
@@ -178,6 +216,13 @@ def open_print_settings_dialog(
         set_row_visible(printer_combo, show_printer)
         set_row_visible(refresh_printers_btn, show_printer)
         set_row_visible(paper_combo, show_paper)
+        set_row_visible(orientation_combo, show_paper)
+        show_printer_prefs = show_paper and sys.platform == "win32"
+        set_row_visible(printer_prefs_btn, show_printer_prefs)
+        windows_paper_notice.setVisible(show_printer_prefs)
+        label = form.labelForField(windows_paper_notice)
+        if label is not None:
+            label.setVisible(show_printer_prefs)
         ipp_uri_edit.setVisible(show_ipp)
         ipp_test_button.setVisible(show_ipp)
         ipp_send_mode_combo.setVisible(show_ipp)
@@ -217,7 +262,30 @@ def open_print_settings_dialog(
             printer_combo.setCurrentText(current)
         update_cups_controls()
 
+    def open_printer_preferences() -> None:
+        if sys.platform != "win32":
+            return
+        name = printer_combo.currentText().strip()
+        if not name:
+            QMessageBox.warning(
+                dialog,
+                "No printer selected",
+                "Select a printer above, then use this button to set paper type and quality.",
+            )
+            return
+        try:
+            subprocess.Popen(
+                ["rundll32", "printui.dll,PrintUIEntry", "/e", "/n", name],
+            )
+        except OSError as e:
+            QMessageBox.warning(
+                dialog,
+                "Could not open preferences",
+                f"Failed to open printer preferences: {e}",
+            )
+
     refresh_printers_btn.clicked.connect(refresh_printers)
+    printer_prefs_btn.clicked.connect(open_printer_preferences)
     ipp_test_button.clicked.connect(test_ipp_connection)
     calibration_button.clicked.connect(
         lambda: on_calibration_clicked(dialog, backend_combo, printer_combo)
@@ -247,6 +315,9 @@ def open_print_settings_dialog(
     form.addRow("Printer", printer_combo)
     form.addRow("", refresh_printers_btn)
     form.addRow("Paper", paper_combo)
+    form.addRow("Orientation", orientation_combo)
+    form.addRow("", printer_prefs_btn)
+    form.addRow("", windows_paper_notice)
     form.addRow("Status", fetch_status_label)
     form.addRow(driver_section_label, driver_placeholder)
     form.addRow("Media", cups_media_combo)
@@ -293,6 +364,9 @@ def open_print_settings_dialog(
     paper_value = paper_combo.currentData()
     if isinstance(paper_value, str):
         window.paper_value = paper_value
+    orientation_value = orientation_combo.currentData()
+    if isinstance(orientation_value, str):
+        window.print_orientation_value = orientation_value
     window.borderless_mode_value = str(borderless_combo.currentData() or "enabled")
     window.borderless_content_scale_percent = borderless_scale_slider.value()
     window.cups_media_value = str(cups_media_combo.currentData() or "")
