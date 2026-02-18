@@ -20,6 +20,17 @@ from album_printer.app_branding import (
     load_clearminds_head_pixmap,
     load_logo_pixmap,
 )
+from album_printer.app_flow_kwargs import (
+    load_google_photos_album_url_flow_kwargs,
+    open_print_settings_dialog_flow_kwargs,
+    open_project_settings_dialog_flow_kwargs,
+    open_settings_dialog_flow_kwargs,
+    print_all_via_cups_flow_kwargs,
+    print_all_via_ipp_flow_kwargs,
+    print_all_via_qt_flow_kwargs,
+    print_borderless_calibration_flow_kwargs,
+    refresh_folder_flow_kwargs,
+)
 from album_printer.app_image_entrypoints import (
     datetime_for_image,
     exif_datetime_for_image,
@@ -854,83 +865,83 @@ PER_IMAGE_LOCATION_STAMP_OVERRIDES = [
 ]
 
 
-OPEN_SETTINGS_DIALOG_FLOW_KWARGS = {
-    "nominatim_default_reverse_url": NOMINATIM_DEFAULT_REVERSE_URL,
-    "nominatim_auth_modes": NOMINATIM_AUTH_MODES,
-    "nominatim_zoom_level_options": NOMINATIM_ZOOM_LEVEL_OPTIONS,
-    "app_version_fn": app_version,
-    "open_settings_dialog_ui_fn": open_settings_dialog_ui,
-}
+OPEN_SETTINGS_DIALOG_FLOW_KWARGS = open_settings_dialog_flow_kwargs(
+    nominatim_default_reverse_url=NOMINATIM_DEFAULT_REVERSE_URL,
+    nominatim_auth_modes=NOMINATIM_AUTH_MODES,
+    nominatim_zoom_level_options=NOMINATIM_ZOOM_LEVEL_OPTIONS,
+    app_version_fn=app_version,
+    open_settings_dialog_ui_fn=open_settings_dialog_ui,
+)
 
-OPEN_PROJECT_SETTINGS_DIALOG_FLOW_KWARGS = {
-    "crop_ratios": CROP_RATIOS,
-    "crop_ratio_labels": CROP_RATIO_LABELS,
-    "location_format_options": LOCATION_FORMAT_OPTIONS,
-    "location_format_template_default": LOCATION_FORMAT_TEMPLATE_DEFAULT,
-    "location_template_tokens": LOCATION_TEMPLATE_TOKENS,
-    "stamp_fonts": STAMP_FONTS,
-    "stamp_scale_min_percent": STAMP_SCALE_MIN_PERCENT,
-    "stamp_scale_max_percent": STAMP_SCALE_MAX_PERCENT,
-    "stamp_offset_min_px": STAMP_OFFSET_MIN_PX,
-    "stamp_offset_max_px": STAMP_OFFSET_MAX_PX,
-    "default_stamp_color": DEFAULT_STAMP_COLOR,
-    "default_stamp_border_color": DEFAULT_STAMP_BORDER_COLOR,
-    "processing_settings_cls": ProcessingSettings,
-    "load_image_as_rgb_fn": load_image_as_rgb,
-    "normalized_geocodejson_geocoding_fn": _normalized_geocodejson_geocoding,
-    "normalized_geocodejson_feature_fn": _normalized_geocodejson_feature,
-    "render_location_template_fn": render_location_template,
-    "location_format_needs_reverse_lookup_fn": location_format_needs_reverse_lookup,
-    "datetime_for_image_fn": datetime_for_image,
-    "center_crop_to_ratio_fn": center_crop_to_ratio,
-    "apply_stamp_fn": apply_stamp,
-    "open_project_settings_dialog_ui_fn": open_project_settings_dialog_ui,
-}
+OPEN_PROJECT_SETTINGS_DIALOG_FLOW_KWARGS = open_project_settings_dialog_flow_kwargs(
+    crop_ratios=CROP_RATIOS,
+    crop_ratio_labels=CROP_RATIO_LABELS,
+    location_format_options=LOCATION_FORMAT_OPTIONS,
+    location_format_template_default=LOCATION_FORMAT_TEMPLATE_DEFAULT,
+    location_template_tokens=LOCATION_TEMPLATE_TOKENS,
+    stamp_fonts=STAMP_FONTS,
+    stamp_scale_min_percent=STAMP_SCALE_MIN_PERCENT,
+    stamp_scale_max_percent=STAMP_SCALE_MAX_PERCENT,
+    stamp_offset_min_px=STAMP_OFFSET_MIN_PX,
+    stamp_offset_max_px=STAMP_OFFSET_MAX_PX,
+    default_stamp_color=DEFAULT_STAMP_COLOR,
+    default_stamp_border_color=DEFAULT_STAMP_BORDER_COLOR,
+    processing_settings_cls=ProcessingSettings,
+    load_image_as_rgb_fn=load_image_as_rgb,
+    normalized_geocodejson_geocoding_fn=_normalized_geocodejson_geocoding,
+    normalized_geocodejson_feature_fn=_normalized_geocodejson_feature,
+    render_location_template_fn=render_location_template,
+    location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
+    datetime_for_image_fn=datetime_for_image,
+    center_crop_to_ratio_fn=center_crop_to_ratio,
+    apply_stamp_fn=apply_stamp,
+    open_project_settings_dialog_ui_fn=open_project_settings_dialog_ui,
+)
 
-OPEN_PRINT_SETTINGS_DIALOG_FLOW_KWARGS = {
-    "print_backends": PRINT_BACKENDS,
-    "ipp_backend_error_cls": IppBackendError,
-    "get_ipp_capabilities_fn": get_ipp_capabilities,
-    "pretty_option_label_fn": pretty_option_label,
-    "is_explicit_borderless_media_fn": is_explicit_borderless_media,
-    "resolve_cups_media_value_fn": resolve_cups_media_value,
-    "open_print_settings_dialog_ui_fn": open_print_settings_dialog_ui,
-}
+OPEN_PRINT_SETTINGS_DIALOG_FLOW_KWARGS = open_print_settings_dialog_flow_kwargs(
+    print_backends=PRINT_BACKENDS,
+    ipp_backend_error_cls=IppBackendError,
+    get_ipp_capabilities_fn=get_ipp_capabilities,
+    pretty_option_label_fn=pretty_option_label,
+    is_explicit_borderless_media_fn=is_explicit_borderless_media,
+    resolve_cups_media_value_fn=resolve_cups_media_value,
+    open_print_settings_dialog_ui_fn=open_print_settings_dialog_ui,
+)
 
-LOAD_GOOGLE_PHOTOS_ALBUM_URL_FLOW_KWARGS = {
-    "worker_cls": SourceLoadWorker,
-}
+LOAD_GOOGLE_PHOTOS_ALBUM_URL_FLOW_KWARGS = load_google_photos_album_url_flow_kwargs(
+    worker_cls=SourceLoadWorker,
+)
 
-REFRESH_FOLDER_FLOW_KWARGS = {
-    "refresh_worker_cls": SourceRefreshWorker,
-}
+REFRESH_FOLDER_FLOW_KWARGS = refresh_folder_flow_kwargs(
+    refresh_worker_cls=SourceRefreshWorker,
+)
 
-PRINT_BORDERLESS_CALIBRATION_FLOW_KWARGS = {
-    "media_size_mm_from_value_fn": media_size_mm_from_value,
-    "create_borderless_calibration_image_fn": create_borderless_calibration_image,
-    "apply_borderless_content_scale_fn": apply_borderless_content_scale,
-    "parse_cups_request_id_fn": parse_cups_request_id,
-}
+PRINT_BORDERLESS_CALIBRATION_FLOW_KWARGS = print_borderless_calibration_flow_kwargs(
+    media_size_mm_from_value_fn=media_size_mm_from_value,
+    create_borderless_calibration_image_fn=create_borderless_calibration_image,
+    apply_borderless_content_scale_fn=apply_borderless_content_scale,
+    parse_cups_request_id_fn=parse_cups_request_id,
+)
 
-PRINT_ALL_VIA_CUPS_FLOW_KWARGS = {
-    "resolve_cups_media_value_fn": resolve_cups_media_value,
-    "render_image_fn": render_image,
-    "apply_borderless_content_scale_fn": apply_borderless_content_scale,
-    "parse_cups_request_id_fn": parse_cups_request_id,
-    "query_cups_job_status_text_fn": query_cups_job_status_text,
-}
+PRINT_ALL_VIA_CUPS_FLOW_KWARGS = print_all_via_cups_flow_kwargs(
+    resolve_cups_media_value_fn=resolve_cups_media_value,
+    render_image_fn=render_image,
+    apply_borderless_content_scale_fn=apply_borderless_content_scale,
+    parse_cups_request_id_fn=parse_cups_request_id,
+    query_cups_job_status_text_fn=query_cups_job_status_text,
+)
 
-PRINT_ALL_VIA_QT_FLOW_KWARGS = {
-    "media_size_mm_from_value_fn": media_size_mm_from_value,
-    "render_image_fn": render_image,
-    "ratios_match_either_orientation_fn": ratios_match_either_orientation,
-}
+PRINT_ALL_VIA_QT_FLOW_KWARGS = print_all_via_qt_flow_kwargs(
+    media_size_mm_from_value_fn=media_size_mm_from_value,
+    render_image_fn=render_image,
+    ratios_match_either_orientation_fn=ratios_match_either_orientation,
+)
 
-PRINT_ALL_VIA_IPP_FLOW_KWARGS = {
-    "render_image_fn": render_image,
-    "print_jobs_via_ipp_fn": print_jobs_via_ipp,
-    "ipp_backend_error_cls": IppBackendError,
-}
+PRINT_ALL_VIA_IPP_FLOW_KWARGS = print_all_via_ipp_flow_kwargs(
+    render_image_fn=render_image,
+    print_jobs_via_ipp_fn=print_jobs_via_ipp,
+    ipp_backend_error_cls=IppBackendError,
+)
 
 MAIN_WINDOW_STARTUP_KWARGS = {
     "app_display_name": APP_DISPLAY_NAME,
