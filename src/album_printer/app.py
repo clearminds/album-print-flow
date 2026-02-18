@@ -58,55 +58,32 @@ from album_printer.app_constants import (
     TABLE_COL_PRINT,
     TABLE_COL_STATE,
     TABLE_COL_THUMB,
-    TABLE_METADATA_BATCH_SIZE_IDLE,
-    TABLE_METADATA_BATCH_SIZE_SCROLLING,
-    TABLE_METADATA_SCROLL_WINDOW_SECONDS,
     THUMBNAIL_MAX_INFLIGHT,
     THUMBNAIL_SIZE,
     THUMBNAIL_UI_CACHE_WARMUP_MAX,
 )
 from album_printer.app_flow_kwargs import (
-    current_table_metadata_batch_size_flow_kwargs,
-    date_used_and_source_flow_kwargs,
-    effective_location_format_flow_kwargs,
-    format_location_flow_kwargs,
-    image_dimensions_flow_kwargs,
-    image_settings_for_path_flow_kwargs,
     load_google_photos_album_url_flow_kwargs,
-    location_for_path_flow_kwargs,
-    location_lookup_status_flow_kwargs,
     main_window_startup_kwargs,
     open_print_settings_dialog_flow_kwargs,
     open_project_settings_dialog_flow_kwargs,
     open_settings_dialog_flow_kwargs,
-    path_needs_crop_flow_kwargs,
     print_all_via_cups_flow_kwargs,
     print_all_via_ipp_flow_kwargs,
     print_all_via_qt_flow_kwargs,
     print_borderless_calibration_flow_kwargs,
-    process_table_metadata_batch_flow_kwargs,
     refresh_folder_flow_kwargs,
-    update_location_status_flow_kwargs,
 )
-from album_printer.app_image_entrypoints import (
-    datetime_for_image,
-    exif_datetime_for_image,
-    exif_location_for_image,
-    load_image_as_rgb,
-    original_metadata_path_for_image,
-)
+from album_printer.app_image_entrypoints import datetime_for_image, load_image_as_rgb
 from album_printer.app_primitives import (
     _normalized_geocodejson_feature,
     _normalized_geocodejson_geocoding,
     apply_manual_rotation,
     center_crop_to_ratio,
     crop_geometry_for_ratio,
-    decimal_to_dms,
     location_format_needs_reverse_lookup,
     normalize_rotation_degrees,
-    parse_datetime_from_filename,
     parse_datetime_override,
-    parse_ratio_pair,
     ratios_match_either_orientation,
     render_location_template,
 )
@@ -500,16 +477,10 @@ from album_printer.ui.footer_progress import (
     clear_footer_progress as clear_footer_progress_flow,
 )
 from album_printer.ui.footer_progress import (
-    gps_resolution_progress_counts as gps_resolution_progress_counts_flow,
-)
-from album_printer.ui.footer_progress import (
     on_footer_progress_action_clicked as on_footer_progress_action_clicked_flow,
 )
 from album_printer.ui.footer_progress import (
     refresh_footer_progress_action as refresh_footer_progress_action_flow,
-)
-from album_printer.ui.footer_progress import (
-    refresh_gps_resolution_progress as refresh_gps_resolution_progress_flow,
 )
 from album_printer.ui.footer_progress import (
     set_footer_progress_action as set_footer_progress_action_flow,
@@ -541,28 +512,16 @@ from album_printer.ui.image_settings_flow import (
     compute_file_hash as compute_file_hash_flow,
 )
 from album_printer.ui.image_settings_flow import (
-    date_used_and_source_for_path as date_used_and_source_for_path_flow,
-)
-from album_printer.ui.image_settings_flow import (
     date_used_for_path as date_used_for_path_flow,
 )
 from album_printer.ui.image_settings_flow import (
     detect_orientation_for_path as detect_orientation_for_path_flow,
 )
 from album_printer.ui.image_settings_flow import (
-    image_dimensions_for_path as image_dimensions_for_path_flow,
-)
-from album_printer.ui.image_settings_flow import (
     image_list_label as image_list_label_flow,
 )
 from album_printer.ui.image_settings_flow import (
-    image_settings_for_path as image_settings_for_path_flow,
-)
-from album_printer.ui.image_settings_flow import (
     is_crop_settings_modified as is_crop_settings_modified_flow,
-)
-from album_printer.ui.image_settings_flow import (
-    path_needs_crop_for_aspect as path_needs_crop_for_aspect_flow,
 )
 from album_printer.ui.image_settings_flow import (
     restore_image_settings_for_selected as restore_image_settings_for_selected_flow,
@@ -606,28 +565,13 @@ from album_printer.ui.image_transform_flow import (
 )
 from album_printer.ui.load_menu import setup_file_load_menu
 from album_printer.ui.location_lookup_flow import (
-    effective_location_format_for_path as effective_location_format_for_path_flow,
-)
-from album_printer.ui.location_lookup_flow import (
-    format_location as format_location_flow,
-)
-from album_printer.ui.location_lookup_flow import (
-    location_for_path as location_for_path_flow,
-)
-from album_printer.ui.location_lookup_flow import (
     location_lookup_cache_for_path as location_lookup_cache_for_path_flow,
 )
 from album_printer.ui.location_lookup_flow import (
     location_lookup_cached_value_for_path as location_lookup_cached_value_for_path_flow,
 )
 from album_printer.ui.location_lookup_flow import (
-    location_lookup_status_for_path as location_lookup_status_for_path_flow,
-)
-from album_printer.ui.location_lookup_flow import (
     store_location_lookup_for_path as store_location_lookup_for_path_flow,
-)
-from album_printer.ui.location_lookup_flow import (
-    update_location_status_for_path as update_location_status_for_path_flow,
 )
 from album_printer.ui.log_console_flow import append_log as append_log_flow
 from album_printer.ui.log_console_flow import (
@@ -654,6 +598,45 @@ from album_printer.ui.log_console_flow import (
 )
 from album_printer.ui.log_console_flow import (
     thread_safe_append_log as thread_safe_append_log_flow,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    current_table_metadata_batch_size as current_table_metadata_batch_size_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    date_used_and_source_for_path as date_used_and_source_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    effective_location_format_for_path as effective_location_format_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    format_location as format_location_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    gps_resolution_progress_counts as gps_resolution_progress_counts_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    image_dimensions_for_path as image_dimensions_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    image_settings_for_path as image_settings_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    location_for_path as location_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    location_lookup_status_for_path as location_lookup_status_for_path_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    path_needs_crop_for_aspect as path_needs_crop_for_aspect_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    process_table_metadata_batch as process_table_metadata_batch_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    refresh_gps_resolution_progress as refresh_gps_resolution_progress_entrypoint,
+)
+from album_printer.ui.main_window_data_entrypoints import (
+    update_location_status_for_path as update_location_status_for_path_entrypoint,
 )
 from album_printer.ui.main_window_startup import initialize_main_window
 from album_printer.ui.menu_flow import setup_menu as setup_menu_flow
@@ -737,16 +720,10 @@ from album_printer.ui.project_state_flow import (
 from album_printer.ui.project_state_flow import selected_path as selected_path_flow
 from album_printer.ui.status_presenter import present_status, present_status_and_log
 from album_printer.ui.table_metadata_flow import (
-    current_table_metadata_batch_size as current_table_metadata_batch_size_flow,
-)
-from album_printer.ui.table_metadata_flow import (
     enqueue_table_metadata_for_paths as enqueue_table_metadata_for_paths_flow,
 )
 from album_printer.ui.table_metadata_flow import (
     note_table_scrolled as note_table_scrolled_flow,
-)
-from album_printer.ui.table_metadata_flow import (
-    process_table_metadata_batch as process_table_metadata_batch_flow,
 )
 from album_printer.ui.table_metadata_flow import (
     start_table_metadata_resolution as start_table_metadata_resolution_flow,
@@ -896,66 +873,6 @@ MAIN_WINDOW_STARTUP_KWARGS = main_window_startup_kwargs(
     reframe_handle_size=REFRAME_HANDLE_SIZE,
     per_image_location_stamp_overrides=PER_IMAGE_LOCATION_STAMP_OVERRIDES,
     log_levels=LOG_LEVELS,
-)
-
-LOCATION_FOR_PATH_FLOW_KWARGS = location_for_path_flow_kwargs(
-    exif_location_for_image_fn=exif_location_for_image,
-)
-
-FORMAT_LOCATION_FLOW_KWARGS = format_location_flow_kwargs(
-    decimal_to_dms_fn=decimal_to_dms,
-    location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
-)
-
-EFFECTIVE_LOCATION_FORMAT_FLOW_KWARGS = effective_location_format_flow_kwargs(
-    location_format_options=LOCATION_FORMAT_OPTIONS,
-)
-
-LOCATION_LOOKUP_STATUS_FLOW_KWARGS = location_lookup_status_flow_kwargs(
-    location_format_needs_reverse_lookup_fn=location_format_needs_reverse_lookup,
-)
-
-UPDATE_LOCATION_STATUS_FLOW_KWARGS = update_location_status_flow_kwargs(
-    table_col_location=TABLE_COL_LOCATION,
-)
-
-IMAGE_SETTINGS_FOR_PATH_FLOW_KWARGS = image_settings_for_path_flow_kwargs(
-    normalize_rotation_degrees_fn=normalize_rotation_degrees,
-    per_image_location_stamp_overrides=PER_IMAGE_LOCATION_STAMP_OVERRIDES,
-)
-
-IMAGE_DIMENSIONS_FLOW_KWARGS = image_dimensions_flow_kwargs(
-    original_metadata_path_for_image_fn=original_metadata_path_for_image,
-    load_image_as_rgb_fn=load_image_as_rgb,
-)
-
-PATH_NEEDS_CROP_FLOW_KWARGS = path_needs_crop_flow_kwargs(
-    normalize_rotation_degrees_fn=normalize_rotation_degrees,
-    parse_ratio_pair_fn=parse_ratio_pair,
-    ratios_match_either_orientation_fn=ratios_match_either_orientation,
-)
-
-DATE_USED_AND_SOURCE_FLOW_KWARGS = date_used_and_source_flow_kwargs(
-    parse_datetime_override_fn=parse_datetime_override,
-    exif_datetime_for_image_fn=exif_datetime_for_image,
-    parse_datetime_from_filename_fn=parse_datetime_from_filename,
-)
-
-CURRENT_TABLE_METADATA_BATCH_SIZE_FLOW_KWARGS = (
-    current_table_metadata_batch_size_flow_kwargs(
-        scroll_window_seconds=TABLE_METADATA_SCROLL_WINDOW_SECONDS,
-        batch_size_scrolling=TABLE_METADATA_BATCH_SIZE_SCROLLING,
-        batch_size_idle=TABLE_METADATA_BATCH_SIZE_IDLE,
-    )
-)
-
-PROCESS_TABLE_METADATA_BATCH_FLOW_KWARGS = process_table_metadata_batch_flow_kwargs(
-    table_col_date_used=TABLE_COL_DATE_USED,
-    table_col_location=TABLE_COL_LOCATION,
-    table_col_aspect=TABLE_COL_ASPECT,
-    scroll_window_seconds=TABLE_METADATA_SCROLL_WINDOW_SECONDS,
-    batch_size_scrolling=TABLE_METADATA_BATCH_SIZE_SCROLLING,
-    batch_size_idle=TABLE_METADATA_BATCH_SIZE_IDLE,
 )
 
 
@@ -1182,7 +1099,7 @@ class MainWindow(QMainWindow):
         return source_captured_at_for_path_flow(self, path)
 
     def location_for_path(self, path: Path) -> tuple[float, float] | None:
-        return location_for_path_flow(self, path, **LOCATION_FOR_PATH_FLOW_KWARGS)
+        return location_for_path_entrypoint(self, path)
 
     def location_lookup_cache_for_path(self, path: Path) -> dict[str, str]:
         return location_lookup_cache_for_path_flow(self, path)
@@ -1208,39 +1125,20 @@ class MainWindow(QMainWindow):
         path: Path | None = None,
         format_value: str | None = None,
     ) -> str:
-        return format_location_flow(
-            self,
-            location,
-            path,
-            format_value,
-            **FORMAT_LOCATION_FLOW_KWARGS,
-        )
+        return format_location_entrypoint(self, location, path, format_value)
 
     def effective_location_format_for_path(
         self,
         path: Path,
         values: dict[str, object] | None = None,
     ) -> str | None:
-        return effective_location_format_for_path_flow(
-            self,
-            path,
-            values,
-            **EFFECTIVE_LOCATION_FORMAT_FLOW_KWARGS,
-        )
+        return effective_location_format_for_path_entrypoint(self, path, values)
 
     def location_lookup_status_for_path(self, path: Path) -> str:
-        return location_lookup_status_for_path_flow(
-            self,
-            path,
-            **LOCATION_LOOKUP_STATUS_FLOW_KWARGS,
-        )
+        return location_lookup_status_for_path_entrypoint(self, path)
 
     def update_location_status_for_path(self, path: Path) -> None:
-        update_location_status_for_path_flow(
-            self,
-            path,
-            **UPDATE_LOCATION_STATUS_FLOW_KWARGS,
-        )
+        update_location_status_for_path_entrypoint(self, path)
 
     def rebuild_image_row_lookup(self) -> None:
         rebuild_image_row_lookup_flow(self)
@@ -1456,18 +1354,10 @@ class MainWindow(QMainWindow):
         clear_footer_progress_flow(self)
 
     def gps_resolution_progress_counts(self) -> tuple[int, int]:
-        lookup_required = location_format_needs_reverse_lookup
-        return gps_resolution_progress_counts_flow(
-            self,
-            location_format_needs_reverse_lookup_fn=lookup_required,
-        )
+        return gps_resolution_progress_counts_entrypoint(self)
 
     def refresh_gps_resolution_progress(self) -> None:
-        lookup_required = location_format_needs_reverse_lookup
-        refresh_gps_resolution_progress_flow(
-            self,
-            location_format_needs_reverse_lookup_fn=lookup_required,
-        )
+        refresh_gps_resolution_progress_entrypoint(self)
 
     def set_footer_progress_action(
         self,
@@ -1525,11 +1415,7 @@ class MainWindow(QMainWindow):
         persist_project_settings_flow(self)
 
     def image_settings_for_path(self, path: Path) -> dict[str, object]:
-        return image_settings_for_path_flow(
-            self,
-            path,
-            **IMAGE_SETTINGS_FOR_PATH_FLOW_KWARGS,
-        )
+        return image_settings_for_path_entrypoint(self, path)
 
     def compute_file_hash(self, path: Path) -> str:
         return compute_file_hash_flow(self, path)
@@ -1544,21 +1430,13 @@ class MainWindow(QMainWindow):
         return detect_orientation_for_path_flow(self, path)
 
     def image_dimensions_for_path(self, path: Path) -> tuple[int, int]:
-        return image_dimensions_for_path_flow(
-            self,
-            path,
-            **IMAGE_DIMENSIONS_FLOW_KWARGS,
-        )
+        return image_dimensions_for_path_entrypoint(self, path)
 
     def source_aspect_ratio_label_for_path(self, path: Path) -> str:
         return source_aspect_ratio_label_for_path_flow(self, path)
 
     def path_needs_crop_for_aspect(self, path: Path) -> bool:
-        return path_needs_crop_for_aspect_flow(
-            self,
-            path,
-            **PATH_NEEDS_CROP_FLOW_KWARGS,
-        )
+        return path_needs_crop_for_aspect_entrypoint(self, path)
 
     def aspect_ratio_cell_text_for_path(self, path: Path) -> str:
         return aspect_ratio_cell_text_for_path_flow(self, path)
@@ -1642,11 +1520,7 @@ class MainWindow(QMainWindow):
         return date_used_for_path_flow(self, path)
 
     def date_used_and_source_for_path(self, path: Path) -> tuple[datetime, str]:
-        return date_used_and_source_for_path_flow(
-            self,
-            path,
-            **DATE_USED_AND_SOURCE_FLOW_KWARGS,
-        )
+        return date_used_and_source_for_path_entrypoint(self, path)
 
     def start_thumbnail_generation(self) -> None:
         start_thumbnail_generation_flow(
@@ -1679,16 +1553,10 @@ class MainWindow(QMainWindow):
         note_table_scrolled_flow(self)
 
     def current_table_metadata_batch_size(self) -> int:
-        return current_table_metadata_batch_size_flow(
-            self,
-            **CURRENT_TABLE_METADATA_BATCH_SIZE_FLOW_KWARGS,
-        )
+        return current_table_metadata_batch_size_entrypoint(self)
 
     def process_table_metadata_batch(self) -> None:
-        process_table_metadata_batch_flow(
-            self,
-            **PROCESS_TABLE_METADATA_BATCH_FLOW_KWARGS,
-        )
+        process_table_metadata_batch_entrypoint(self)
 
     def refresh_image_list_labels(self, preferred_path: Path | None = None) -> None:
         refresh_image_list_labels_flow(
