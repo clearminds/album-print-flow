@@ -11,7 +11,7 @@ try:
 except Exception:
     pillow_heif = None
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtWidgets import QComboBox, QMainWindow, QMessageBox
 
@@ -29,10 +29,8 @@ from album_printer.app_constants import (
     LOCATION_FORMAT_OPTIONS,
     LOCATION_FORMAT_TEMPLATE_DEFAULT,
     LOCATION_TEMPLATE_TOKENS,
-    LOG_FILENAME,
     LOG_LEVEL_RANK,
     LOG_LEVELS,
-    METADATA_FILENAME,
     NOMINATIM_AUTH_MODES,
     NOMINATIM_CACHE_FILENAME,
     NOMINATIM_CACHE_MAX_ENTRIES,
@@ -245,7 +243,7 @@ from album_printer.settings_store import (
 from album_printer.settings_store import (
     save_app_project_settings as save_project_settings_to_store,
 )
-from album_printer.source_state_store import load_source_state, save_source_state
+from album_printer.source_state_store import load_source_state
 from album_printer.sources import (
     FolderSource,
     GooglePhotosAlbumUrlSource,
@@ -258,71 +256,11 @@ from album_printer.sources.flows.album_url import (
     handle_process_album_sync_live_snapshot,
     handle_source_load_finished,
 )
-from album_printer.sources.flows.apply import (
-    apply_source_load_result as apply_source_load_result_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    format_storage_size as format_storage_size_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    google_photos_album_url_cache_dir as google_photos_album_url_cache_dir_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    google_photos_cache_dir as google_photos_cache_dir_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    legacy_metadata_path as legacy_metadata_path_flow,
-)
 from album_printer.sources.flows.folder_metadata import (
     load_folder_metadata as load_folder_metadata_flow,
 )
 from album_printer.sources.flows.folder_metadata import (
-    metadata_context_key as metadata_context_key_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    metadata_index_path as metadata_index_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    metadata_path as metadata_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    metadata_root_path as metadata_root_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    metadata_source_dir as metadata_source_dir_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    metadata_source_id as metadata_source_id_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    migrate_thumbnail_cache_file as migrate_thumbnail_cache_file_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    path_storage_stats as path_storage_stats_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    remove_path_tree as remove_path_tree_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
     save_folder_metadata as save_folder_metadata_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    thumbnail_cache_candidate_paths as thumbnail_cache_candidate_paths_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    thumbnail_cache_context_dir as thumbnail_cache_context_dir_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    thumbnail_cache_file_path as thumbnail_cache_file_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    thumbnail_cache_legacy_file_path as thumbnail_cache_legacy_file_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    thumbnail_cache_root_path as thumbnail_cache_root_path_flow,
-)
-from album_printer.sources.flows.folder_metadata import (
-    update_metadata_index as update_metadata_index_flow,
 )
 from album_printer.sources.flows.load import (
     handle_load_folder,
@@ -331,9 +269,6 @@ from album_printer.sources.flows.load import (
     handle_refresh_folder,
     handle_source_refresh_finished,
     handle_test_google_setup,
-)
-from album_printer.sources.flows.metadata_sync import (
-    update_source_metadata_for_assets as update_source_metadata_for_assets_flow,
 )
 from album_printer.sources.flows.startup_bookmarks import (
     on_startup_bookmark_scan_finished as on_startup_bookmark_scan_finished_flow,
@@ -345,9 +280,6 @@ from album_printer.sources.flows.startup_bookmarks import (
     startup_scan_bookmarked_google_albums as startup_scan_bookmarked_google_albums_flow,
 )
 from album_printer.sources.flows.state_sync import (
-    merge_global_source_state_into_folder as merge_global_source_state_into_folder_flow,
-)
-from album_printer.sources.flows.state_sync import (
     metadata_key_for_path as metadata_key_for_path_flow,
 )
 from album_printer.sources.flows.state_sync import (
@@ -355,9 +287,6 @@ from album_printer.sources.flows.state_sync import (
 )
 from album_printer.sources.flows.state_sync import (
     source_photo_id_for_path as source_photo_id_for_path_flow,
-)
-from album_printer.sources.flows.state_sync import (
-    sync_global_source_state_from_path as sync_global_source_state_from_path_flow,
 )
 from album_printer.sources.flows.sync_controls import (
     cancel_active_source_load_for_switch as cancel_active_source_load_for_switch_flow,
@@ -451,9 +380,6 @@ from album_printer.ui.datetime_override_flow import (
     set_datetime_override_for_selected as set_datetime_override_for_selected_flow,
 )
 from album_printer.ui.dialog_launchers import (
-    open_cache_manager_dialog as open_cache_manager_dialog_flow,
-)
-from album_printer.ui.dialog_launchers import (
     open_print_settings_dialog as open_print_settings_dialog_flow,
 )
 from album_printer.ui.dialog_launchers import (
@@ -462,7 +388,6 @@ from album_printer.ui.dialog_launchers import (
 from album_printer.ui.dialog_launchers import (
     open_settings_dialog as open_settings_dialog_flow,
 )
-from album_printer.ui.dialogs.metadata_manager import open_metadata_manager_dialog
 from album_printer.ui.dialogs.print_settings import (
     open_print_settings_dialog as open_print_settings_dialog_ui,
 )
@@ -573,29 +498,6 @@ from album_printer.ui.location_lookup_flow import (
 from album_printer.ui.location_lookup_flow import (
     store_location_lookup_for_path as store_location_lookup_for_path_flow,
 )
-from album_printer.ui.log_console_flow import append_log as append_log_flow
-from album_printer.ui.log_console_flow import (
-    clear_log_console as clear_log_console_flow,
-)
-from album_printer.ui.log_console_flow import (
-    current_log_level_rank as current_log_level_rank_flow,
-)
-from album_printer.ui.log_console_flow import (
-    current_log_text_filter as current_log_text_filter_flow,
-)
-from album_printer.ui.log_console_flow import (
-    log_entry_visible as log_entry_visible_flow,
-)
-from album_printer.ui.log_console_flow import log_file_path as log_file_path_flow
-from album_printer.ui.log_console_flow import (
-    on_log_level_changed as on_log_level_changed_flow,
-)
-from album_printer.ui.log_console_flow import (
-    on_log_text_filter_changed as on_log_text_filter_changed_flow,
-)
-from album_printer.ui.log_console_flow import (
-    refresh_log_console as refresh_log_console_flow,
-)
 from album_printer.ui.log_console_flow import (
     thread_safe_append_log as thread_safe_append_log_flow,
 )
@@ -639,6 +541,111 @@ from album_printer.ui.main_window_data_entrypoints import (
     update_location_status_for_path as update_location_status_for_path_entrypoint,
 )
 from album_printer.ui.main_window_startup import initialize_main_window
+from album_printer.ui.main_window_storage_entrypoints import (
+    append_log as append_log_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    apply_source_load_result as apply_source_load_result_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    clear_log_console as clear_log_console_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    current_log_level_rank as current_log_level_rank_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    current_log_text_filter as current_log_text_filter_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    format_storage_size as format_storage_size_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    google_photos_album_url_cache_dir as google_photos_album_url_cache_dir_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    google_photos_cache_dir as google_photos_cache_dir_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    legacy_metadata_path as legacy_metadata_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    load_cached_thumbnail as load_cached_thumbnail_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    log_entry_visible as log_entry_visible_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    log_file_path as log_file_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    merge_global_source_state_into_folder as merge_source_state_into_folder_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_context_key as metadata_context_key_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_index_path as metadata_index_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_path as metadata_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_root_path as metadata_root_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_source_dir as metadata_source_dir_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    metadata_source_id as metadata_source_id_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    migrate_thumbnail_cache_file as migrate_thumbnail_cache_file_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    migrate_thumbnail_cache_for_paths as migrate_thumbnail_cache_for_paths_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    on_log_level_changed as on_log_level_changed_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    on_log_text_filter_changed as on_log_text_filter_changed_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    open_cache_manager_dialog as open_cache_manager_dialog_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    path_storage_stats as path_storage_stats_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    refresh_log_console as refresh_log_console_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    remove_path_tree as remove_path_tree_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    sync_global_source_state_from_path as sync_global_source_state_from_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    thumbnail_cache_candidate_paths as thumbnail_cache_candidate_paths_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    thumbnail_cache_context_dir as thumbnail_cache_context_dir_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    thumbnail_cache_file_path as thumbnail_cache_file_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    thumbnail_cache_legacy_file_path as thumbnail_cache_legacy_file_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    thumbnail_cache_root_path as thumbnail_cache_root_path_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    update_metadata_index as update_metadata_index_entrypoint,
+)
+from album_printer.ui.main_window_storage_entrypoints import (
+    update_source_metadata_for_assets as update_source_metadata_for_assets_entrypoint,
+)
 from album_printer.ui.menu_flow import setup_menu as setup_menu_flow
 from album_printer.ui.nominatim_settings_flow import (
     format_nominatim_geocodejson as format_nominatim_geocodejson_flow,
@@ -738,12 +745,6 @@ from album_printer.ui.table_sort_flow import (
 from album_printer.ui.table_sort_flow import sort_key_for_path as sort_key_for_path_flow
 from album_printer.ui.table_sort_flow import (
     update_table_sort_indicator as update_table_sort_indicator_flow,
-)
-from album_printer.ui.thumbnail_cache_flow import (
-    load_cached_thumbnail as load_cached_thumbnail_flow,
-)
-from album_printer.ui.thumbnail_cache_flow import (
-    migrate_thumbnail_cache_for_paths as migrate_thumbnail_cache_for_paths_flow,
 )
 from album_printer.ui.thumbnail_cache_flow import (
     start_thumbnail_generation as start_thumbnail_generation_flow,
@@ -1147,18 +1148,13 @@ class MainWindow(QMainWindow):
         return row_for_path_flow(self, path)
 
     def sync_global_source_state_from_path(self, path: Path) -> None:
-        sync_global_source_state_from_path_flow(
-            self,
-            path,
-            settings_org=SETTINGS_ORG,
-            save_source_state_fn=save_source_state,
-        )
+        sync_global_source_state_from_path_entrypoint(self, path)
 
     def merge_global_source_state_into_folder(self) -> bool:
-        return merge_global_source_state_into_folder_flow(self)
+        return merge_source_state_into_folder_entrypoint(self)
 
     def update_source_metadata_for_assets(self) -> bool:
-        return update_source_metadata_for_assets_flow(self)
+        return update_source_metadata_for_assets_entrypoint(self)
 
     def apply_source_load_result(
         self,
@@ -1166,76 +1162,60 @@ class MainWindow(QMainWindow):
         open_settings_if_new: bool,
         preferred_path: Path | None,
     ) -> None:
-        apply_source_load_result_flow(
+        apply_source_load_result_entrypoint(
             self,
             result,
             open_settings_if_new,
             preferred_path,
-            table_col_file=TABLE_COL_FILE,
         )
 
     def metadata_root_path(self) -> Path:
-        return metadata_root_path_flow(settings_org=SETTINGS_ORG)
+        return metadata_root_path_entrypoint()
 
     def metadata_source_id(self) -> str:
-        return metadata_source_id_flow(self)
+        return metadata_source_id_entrypoint(self)
 
     def metadata_source_dir(self) -> Path:
-        return metadata_source_dir_flow(self, settings_org=SETTINGS_ORG)
+        return metadata_source_dir_entrypoint(self)
 
     @staticmethod
     def format_storage_size(value_bytes: int) -> str:
-        return format_storage_size_flow(value_bytes)
+        return format_storage_size_entrypoint(value_bytes)
 
     @staticmethod
     def path_storage_stats(path: Path) -> tuple[int, int]:
-        return path_storage_stats_flow(path)
+        return path_storage_stats_entrypoint(path)
 
     @staticmethod
     def remove_path_tree(path: Path) -> tuple[int, int]:
-        return remove_path_tree_flow(path)
+        return remove_path_tree_entrypoint(path)
 
     def google_photos_cache_dir(self) -> Path:
-        return google_photos_cache_dir_flow(settings_org=SETTINGS_ORG)
+        return google_photos_cache_dir_entrypoint()
 
     def google_photos_album_url_cache_dir(self) -> Path:
-        return google_photos_album_url_cache_dir_flow(settings_org=SETTINGS_ORG)
+        return google_photos_album_url_cache_dir_entrypoint()
 
     def open_cache_manager_dialog(self) -> None:
-        open_cache_manager_dialog_flow(
-            self,
-            open_metadata_manager_dialog_fn=open_metadata_manager_dialog,
-        )
+        open_cache_manager_dialog_entrypoint(self)
 
     def thumbnail_cache_root_path(self) -> Path:
-        return thumbnail_cache_root_path_flow(settings_org=SETTINGS_ORG)
+        return thumbnail_cache_root_path_entrypoint()
 
     def thumbnail_cache_context_dir(self) -> Path:
-        return thumbnail_cache_context_dir_flow(self, settings_org=SETTINGS_ORG)
+        return thumbnail_cache_context_dir_entrypoint(self)
 
     def thumbnail_cache_file_path(self, path: Path) -> Path:
-        return thumbnail_cache_file_path_flow(
-            self,
-            path,
-            settings_org=SETTINGS_ORG,
-        )
+        return thumbnail_cache_file_path_entrypoint(self, path)
 
     def thumbnail_cache_legacy_file_path(self, path: Path) -> Path:
-        return thumbnail_cache_legacy_file_path_flow(
-            self,
-            path,
-            settings_org=SETTINGS_ORG,
-        )
+        return thumbnail_cache_legacy_file_path_entrypoint(self, path)
 
     def thumbnail_cache_candidate_paths(self, path: Path) -> tuple[Path, Path]:
-        return thumbnail_cache_candidate_paths_flow(
-            self,
-            path,
-            settings_org=SETTINGS_ORG,
-        )
+        return thumbnail_cache_candidate_paths_entrypoint(self, path)
 
     def load_cached_thumbnail(self, path: Path) -> QPixmap | None:
-        return load_cached_thumbnail_flow(self, path)
+        return load_cached_thumbnail_entrypoint(self, path)
 
     def migrate_thumbnail_cache_file(
         self,
@@ -1243,62 +1223,53 @@ class MainWindow(QMainWindow):
         *,
         source_mtime_ns: int | None = None,
     ) -> bool:
-        return migrate_thumbnail_cache_file_flow(
+        return migrate_thumbnail_cache_file_entrypoint(
             self,
             path,
             source_mtime_ns=source_mtime_ns,
         )
 
     def migrate_thumbnail_cache_for_paths(self, paths: list[Path]) -> int:
-        return migrate_thumbnail_cache_for_paths_flow(self, paths)
+        return migrate_thumbnail_cache_for_paths_entrypoint(self, paths)
 
     def metadata_index_path(self) -> Path:
-        return metadata_index_path_flow(self)
+        return metadata_index_path_entrypoint(self)
 
     def metadata_context_key(self) -> str:
-        return metadata_context_key_flow(self)
+        return metadata_context_key_entrypoint(self)
 
     def legacy_metadata_path(self) -> Path | None:
-        return legacy_metadata_path_flow(self, metadata_filename=METADATA_FILENAME)
+        return legacy_metadata_path_entrypoint(self)
 
     def metadata_path(self) -> Path | None:
-        return metadata_path_flow(self)
+        return metadata_path_entrypoint(self)
 
     def update_metadata_index(self, metadata_file_path: Path) -> None:
-        update_metadata_index_flow(self, metadata_file_path)
+        update_metadata_index_entrypoint(self, metadata_file_path)
 
     def log_file_path(self) -> Path | None:
-        return log_file_path_flow(
-            self,
-            settings_org=SETTINGS_ORG,
-            log_filename=LOG_FILENAME,
-        )
+        return log_file_path_entrypoint(self)
 
     def current_log_level_rank(self) -> int:
-        return current_log_level_rank_flow(self, log_level_rank=LOG_LEVEL_RANK)
+        return current_log_level_rank_entrypoint(self)
 
     def current_log_text_filter(self) -> str:
-        return current_log_text_filter_flow(self)
+        return current_log_text_filter_entrypoint(self)
 
     def _log_entry_visible(self, level: str, line: str) -> bool:
-        return log_entry_visible_flow(
-            self,
-            level,
-            line,
-            log_level_rank=LOG_LEVEL_RANK,
-        )
+        return log_entry_visible_entrypoint(self, level, line)
 
     def refresh_log_console(self) -> None:
-        refresh_log_console_flow(self)
+        refresh_log_console_entrypoint(self)
 
     def on_log_level_changed(self, value: str) -> None:
-        on_log_level_changed_flow(self, value, log_level_rank=LOG_LEVEL_RANK)
+        on_log_level_changed_entrypoint(self, value)
 
     def on_log_text_filter_changed(self, value: str) -> None:
-        on_log_text_filter_changed_flow(self, value)
+        on_log_text_filter_changed_entrypoint(self, value)
 
     def clear_log_console(self) -> None:
-        clear_log_console_flow(self)
+        clear_log_console_entrypoint(self)
 
     def refresh_print_queue_table(self) -> None:
         refresh_print_queue_table_entrypoint(self)
@@ -1331,13 +1302,7 @@ class MainWindow(QMainWindow):
         clear_finished_queue_items_entrypoint(self)
 
     def append_log(self, level: str, message: str) -> None:
-        append_log_flow(
-            self,
-            level,
-            message,
-            qthread_cls=QThread,
-            log_level_rank=LOG_LEVEL_RANK,
-        )
+        append_log_entrypoint(self, level, message)
 
     def maybe_update_album_sync_status_from_log(self, level: str, message: str) -> bool:
         return maybe_update_album_sync_status_flow(
