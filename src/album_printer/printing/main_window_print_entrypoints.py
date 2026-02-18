@@ -3,6 +3,126 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from PySide6.QtWidgets import QComboBox
+
+from album_printer.app_printing_entrypoints import CUPS_KEYS
+from album_printer.printing.flows.history import (
+    clear_failed_logs_for_selected as clear_failed_logs_for_selected_flow,
+)
+from album_printer.printing.flows.history import (
+    clear_selected_print_status as clear_selected_print_status_flow,
+)
+from album_printer.printing.flows.history import (
+    ensure_photo_entry_for_path as ensure_photo_entry_for_path_flow,
+)
+from album_printer.printing.flows.history import (
+    is_already_printed as is_already_printed_flow,
+)
+from album_printer.printing.flows.history import (
+    is_ignored_for_print_all as is_ignored_for_print_all_flow,
+)
+from album_printer.printing.flows.history import (
+    latest_print_status_for_path as latest_print_status_for_path_flow,
+)
+from album_printer.printing.flows.history import (
+    mark_selected_as_printed as mark_selected_as_printed_flow,
+)
+from album_printer.printing.flows.history import (
+    on_ignore_for_print_all_toggled as on_ignore_for_print_all_toggled_flow,
+)
+from album_printer.printing.flows.history import (
+    should_include_in_print_all as should_include_in_print_all_flow,
+)
+from album_printer.printing.flows.history import (
+    update_selected_print_info as update_selected_print_info_flow,
+)
+from album_printer.printing.flows.paper import paper_size_mm as paper_size_mm_flow
+from album_printer.printing.flows.selection import print_all as print_all_flow
+from album_printer.printing.flows.selection import print_selected as print_selected_flow
+from album_printer.printing.flows.selection import (
+    selected_paths_for_printing as selected_paths_for_printing_flow,
+)
+from album_printer.printing.flows.setup import (
+    get_cups_capabilities as get_cups_capabilities_flow,
+)
+from album_printer.printing.flows.setup import (
+    is_cups_available as is_cups_available_flow,
+)
+from album_printer.printing.flows.setup import (
+    populate_printers_combo as populate_printers_combo_flow,
+)
+
+
+def ensure_photo_entry_for_path(window: Any, path: Path) -> dict[str, object]:
+    return ensure_photo_entry_for_path_flow(window, path)
+
+
+def is_ignored_for_print_all(window: Any, path: Path) -> bool:
+    return is_ignored_for_print_all_flow(window, path)
+
+
+def is_already_printed(window: Any, path: Path) -> bool:
+    return is_already_printed_flow(window, path)
+
+
+def should_include_in_print_all(window: Any, path: Path) -> bool:
+    return should_include_in_print_all_flow(window, path)
+
+
+def latest_print_status_for_path(window: Any, path: Path) -> str:
+    return latest_print_status_for_path_flow(window, path)
+
+
+def on_ignore_for_print_all_toggled(window: Any, checked: bool) -> None:
+    on_ignore_for_print_all_toggled_flow(window, checked)
+
+
+def mark_selected_as_printed(window: Any) -> None:
+    mark_selected_as_printed_flow(window)
+
+
+def clear_failed_logs_for_selected(window: Any) -> None:
+    clear_failed_logs_for_selected_flow(window)
+
+
+def clear_selected_print_status(window: Any) -> None:
+    clear_selected_print_status_flow(window)
+
+
+def update_selected_print_info(window: Any) -> None:
+    update_selected_print_info_flow(window)
+
+
+def populate_printers_combo(window: Any, combo: QComboBox) -> None:
+    populate_printers_combo_flow(window, combo)
+
+
+def is_cups_available() -> bool:
+    return is_cups_available_flow()
+
+
+def get_cups_capabilities(
+    window: Any,
+    printer_name: str,
+) -> tuple[dict[str, list[str]], dict[str, str]]:
+    return get_cups_capabilities_flow(window, printer_name, CUPS_KEYS)
+
+
+def paper_size_mm(paper_value: str) -> tuple[float, float]:
+    return paper_size_mm_flow(paper_value)
+
+
+def selected_paths_for_printing(window: Any) -> list[Path]:
+    return selected_paths_for_printing_flow(window)
+
+
+def print_selected(window: Any) -> None:
+    print_selected_flow(window)
+
+
+def print_all(window: Any) -> None:
+    print_all_flow(window)
+
 
 def print_borderless_calibration_pages(
     window: Any,
@@ -117,11 +237,28 @@ def print_all_via_ipp(
 
 
 __all__ = [
+    "clear_failed_logs_for_selected",
+    "clear_selected_print_status",
     "execute_print_paths",
+    "ensure_photo_entry_for_path",
+    "get_cups_capabilities",
+    "is_already_printed",
+    "is_cups_available",
+    "is_ignored_for_print_all",
+    "latest_print_status_for_path",
+    "mark_selected_as_printed",
+    "on_ignore_for_print_all_toggled",
+    "paper_size_mm",
+    "populate_printers_combo",
+    "print_all",
     "print_all_via_cups",
     "print_all_via_ipp",
     "print_all_via_qt",
     "print_borderless_calibration_pages",
     "print_paths",
+    "print_selected",
     "record_print_history",
+    "selected_paths_for_printing",
+    "should_include_in_print_all",
+    "update_selected_print_info",
 ]

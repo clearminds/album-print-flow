@@ -84,7 +84,6 @@ from album_printer.app_primitives import (
     render_location_template,
 )
 from album_printer.app_printing_entrypoints import (
-    CUPS_KEYS,
     apply_borderless_content_scale,
     create_borderless_calibration_image,
     is_explicit_borderless_media,
@@ -120,37 +119,7 @@ from album_printer.printing.flows.dispatch import (
     execute_print_paths as execute_print_paths_flow,
 )
 from album_printer.printing.flows.history import (
-    clear_failed_logs_for_selected as clear_failed_logs_for_selected_flow,
-)
-from album_printer.printing.flows.history import (
-    clear_selected_print_status as clear_selected_print_status_flow,
-)
-from album_printer.printing.flows.history import (
-    ensure_photo_entry_for_path as ensure_photo_entry_for_path_flow,
-)
-from album_printer.printing.flows.history import (
-    is_already_printed as is_already_printed_flow,
-)
-from album_printer.printing.flows.history import (
-    is_ignored_for_print_all as is_ignored_for_print_all_flow,
-)
-from album_printer.printing.flows.history import (
-    latest_print_status_for_path as latest_print_status_for_path_flow,
-)
-from album_printer.printing.flows.history import (
-    mark_selected_as_printed as mark_selected_as_printed_flow,
-)
-from album_printer.printing.flows.history import (
-    on_ignore_for_print_all_toggled as on_ignore_for_print_all_toggled_flow,
-)
-from album_printer.printing.flows.history import (
     record_print_history as record_print_history_flow,
-)
-from album_printer.printing.flows.history import (
-    should_include_in_print_all as should_include_in_print_all_flow,
-)
-from album_printer.printing.flows.history import (
-    update_selected_print_info as update_selected_print_info_flow,
 )
 from album_printer.printing.flows.orchestrator import (
     print_all_via_cups as print_all_via_cups_flow,
@@ -161,27 +130,51 @@ from album_printer.printing.flows.orchestrator import (
 from album_printer.printing.flows.orchestrator import (
     print_all_via_qt as print_all_via_qt_flow,
 )
-from album_printer.printing.flows.paper import paper_size_mm as paper_size_mm_flow
-from album_printer.printing.flows.selection import print_all as print_all_flow
 from album_printer.printing.flows.selection import print_paths as print_paths_flow
-from album_printer.printing.flows.selection import print_selected as print_selected_flow
-from album_printer.printing.flows.selection import (
-    selected_paths_for_printing as selected_paths_for_printing_flow,
-)
-from album_printer.printing.flows.setup import (
-    get_cups_capabilities as get_cups_capabilities_flow,
-)
-from album_printer.printing.flows.setup import (
-    is_cups_available as is_cups_available_flow,
-)
-from album_printer.printing.flows.setup import (
-    populate_printers_combo as populate_printers_combo_flow,
-)
 from album_printer.printing.flows.setup import (
     print_borderless_calibration_pages as print_borderless_calibration_pages_flow,
 )
 from album_printer.printing.main_window_print_entrypoints import (
+    clear_failed_logs_for_selected as clear_failed_logs_for_selected_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    clear_selected_print_status as clear_selected_print_status_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    ensure_photo_entry_for_path as ensure_photo_entry_for_path_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
     execute_print_paths as execute_print_paths_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    get_cups_capabilities as get_cups_capabilities_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    is_already_printed as is_already_printed_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    is_cups_available as is_cups_available_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    is_ignored_for_print_all as is_ignored_for_print_all_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    latest_print_status_for_path as latest_print_status_for_path_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    mark_selected_as_printed as mark_selected_as_printed_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    on_ignore_for_print_all_toggled as on_ignore_for_print_all_toggled_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    paper_size_mm as paper_size_mm_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    populate_printers_combo as populate_printers_combo_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    print_all as print_all_entrypoint,
 )
 from album_printer.printing.main_window_print_entrypoints import (
     print_all_via_cups as print_all_via_cups_entrypoint,
@@ -199,7 +192,19 @@ from album_printer.printing.main_window_print_entrypoints import (
     print_paths as print_paths_entrypoint,
 )
 from album_printer.printing.main_window_print_entrypoints import (
+    print_selected as print_selected_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
     record_print_history as record_print_history_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    selected_paths_for_printing as selected_paths_for_printing_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    should_include_in_print_all as should_include_in_print_all_entrypoint,
+)
+from album_printer.printing.main_window_print_entrypoints import (
+    update_selected_print_info as update_selected_print_info_entrypoint,
 )
 from album_printer.printing.main_window_queue_entrypoints import (
     cancel_selected_queue_item as cancel_selected_queue_item_entrypoint,
@@ -1408,34 +1413,34 @@ class MainWindow(QMainWindow):
         )
 
     def ensure_photo_entry_for_path(self, path: Path) -> dict[str, object]:
-        return ensure_photo_entry_for_path_flow(self, path)
+        return ensure_photo_entry_for_path_entrypoint(self, path)
 
     def is_ignored_for_print_all(self, path: Path) -> bool:
-        return is_ignored_for_print_all_flow(self, path)
+        return is_ignored_for_print_all_entrypoint(self, path)
 
     def is_already_printed(self, path: Path) -> bool:
-        return is_already_printed_flow(self, path)
+        return is_already_printed_entrypoint(self, path)
 
     def should_include_in_print_all(self, path: Path) -> bool:
-        return should_include_in_print_all_flow(self, path)
+        return should_include_in_print_all_entrypoint(self, path)
 
     def latest_print_status_for_path(self, path: Path) -> str:
-        return latest_print_status_for_path_flow(self, path)
+        return latest_print_status_for_path_entrypoint(self, path)
 
     def on_ignore_for_print_all_toggled(self, checked: bool) -> None:
-        on_ignore_for_print_all_toggled_flow(self, checked)
+        on_ignore_for_print_all_toggled_entrypoint(self, checked)
 
     def mark_selected_as_printed(self) -> None:
-        mark_selected_as_printed_flow(self)
+        mark_selected_as_printed_entrypoint(self)
 
     def clear_failed_logs_for_selected(self) -> None:
-        clear_failed_logs_for_selected_flow(self)
+        clear_failed_logs_for_selected_entrypoint(self)
 
     def clear_selected_print_status(self) -> None:
-        clear_selected_print_status_flow(self)
+        clear_selected_print_status_entrypoint(self)
 
     def update_selected_print_info(self) -> None:
-        update_selected_print_info_flow(self)
+        update_selected_print_info_entrypoint(self)
 
     def image_list_label(self, path: Path) -> str:
         return image_list_label_flow(self, path)
@@ -1693,7 +1698,7 @@ class MainWindow(QMainWindow):
         select_next_aspect_mismatch_flow(self)
 
     def populate_printers_combo(self, combo: QComboBox) -> None:
-        populate_printers_combo_flow(self, combo)
+        populate_printers_combo_entrypoint(self, combo)
 
     def parse_cups_options(
         self, output: str
@@ -1701,12 +1706,12 @@ class MainWindow(QMainWindow):
         return parse_cups_options_output(output)
 
     def is_cups_available(self) -> bool:
-        return is_cups_available_flow()
+        return is_cups_available_entrypoint()
 
     def get_cups_capabilities(
         self, printer_name: str
     ) -> tuple[dict[str, list[str]], dict[str, str]]:
-        return get_cups_capabilities_flow(self, printer_name, CUPS_KEYS)
+        return get_cups_capabilities_entrypoint(self, printer_name)
 
     def open_project_settings_dialog(self) -> None:
         open_project_settings_dialog_flow(
@@ -1779,7 +1784,7 @@ class MainWindow(QMainWindow):
         )
 
     def paper_size_mm(self) -> tuple[float, float]:
-        return paper_size_mm_flow(self.paper_value)
+        return paper_size_mm_entrypoint(self.paper_value)
 
     def print_borderless_calibration_pages(
         self,
@@ -1825,10 +1830,10 @@ class MainWindow(QMainWindow):
         )
 
     def selected_paths_for_printing(self) -> list[Path]:
-        return selected_paths_for_printing_flow(self)
+        return selected_paths_for_printing_entrypoint(self)
 
     def print_selected(self) -> None:
-        print_selected_flow(self)
+        print_selected_entrypoint(self)
 
     def record_print_history(
         self,
@@ -1853,7 +1858,7 @@ class MainWindow(QMainWindow):
         )
 
     def print_all(self) -> None:
-        print_all_flow(self)
+        print_all_entrypoint(self)
 
     def print_paths(self, paths: list[Path]) -> None:
         print_paths_entrypoint(
