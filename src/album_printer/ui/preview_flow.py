@@ -273,7 +273,8 @@ def refresh_preview(
     qt_image = QImage(ImageQt(image))
     pixmap = QPixmap.fromImage(qt_image)
     scaled = pixmap.scaled(
-        window.preview_container.viewport().size(),
+        int(viewport_size.width()),
+        int(viewport_size.height()),
         Qt.AspectRatioMode.KeepAspectRatio,
         Qt.TransformationMode.SmoothTransformation,
     )

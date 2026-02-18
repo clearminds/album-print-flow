@@ -49,6 +49,10 @@ def print_all_via_qt(
                 f"'{window.cups_media_value}', using fallback '{window.paper_value}'",
             )
 
+    # Use a fixed resolution so layout-based pixel rect matches the paint device
+    # (on Windows, pageRect(DevicePixel) can be wrong or not match our page size)
+    resolution = 300
+    printer.setResolution(resolution)
     printer.setFullPage(borderless)
     page_size = QPageSize(
         QSizeF(width_mm, height_mm), QPageSize.Unit.Millimeter, page_name
@@ -62,9 +66,17 @@ def print_all_via_qt(
     )
     printer.setPageLayout(layout)
 
-    page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
+    # Use the layout's paint rect in pixels so coordinates match our page size
+    # (critical on Windows where driver may not report pageRect correctly)
+    page_rect = layout.paintRectPixels(resolution)
     page_w = page_rect.width()
     page_h = page_rect.height()
+    if page_w <= 0 or page_h <= 0:
+        return (
+            printed_successfully,
+            failed,
+            "Invalid page size (layout paint rect is empty)",
+        )
 
     painter = QPainter(printer)
     if not painter.isActive():
@@ -111,7 +123,8 @@ def print_all_via_qt(
                         target = page_rect.adjusted(0, y, 0, -(page_h - target_h - y))
 
             scaled = pixmap.scaled(
-                target.size(),
+                int(target.width()),
+                int(target.height()),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )

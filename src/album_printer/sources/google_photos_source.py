@@ -1947,7 +1947,8 @@ class GooglePhotosSource:
             else:
                 cover_label.setPixmap(
                     pixmap.scaled(
-                        cover_label.size(),
+                        int(cover_label.width()),
+                        int(cover_label.height()),
                         Qt.AspectRatioMode.KeepAspectRatio,
                         Qt.TransformationMode.SmoothTransformation,
                     )

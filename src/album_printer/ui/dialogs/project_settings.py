@@ -946,8 +946,8 @@ def open_project_settings_dialog(
 
         pixmap = QPixmap.fromImage(QImage(ImageQt(image)))
         scaled = pixmap.scaled(
-            max(180, preview_label.width()),
-            max(140, preview_label.height()),
+            int(max(180, preview_label.width())),
+            int(max(140, preview_label.height())),
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )

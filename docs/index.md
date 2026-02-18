@@ -42,6 +42,8 @@ Desktop tool to load a folder of photos, crop to print ratio, apply lightweight 
 
 ## Run locally
 
+**Linux / macOS (bash):**
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -49,6 +51,24 @@ pip install -r requirements.txt
 pip install -e .[dev]
 PYTHONPATH=src python -m album_printer
 ```
+
+**Windows (PowerShell):**
+
+1. From the repo root, run the dev setup script. If Python 3.11+ is missing, the script will offer to install **winget** (if needed) and then **Python 3.12** via winget. Alternatively install [Python 3.11+](https://www.python.org/downloads/) yourself.
+2. Run the script (creates `.venv`, installs deps and pre-commit):
+
+   ```powershell
+   .\scripts\setup-dev-windows.ps1
+   ```
+
+3. Activate the venv and run the app:
+
+   ```powershell
+   .\.venv\Scripts\Activate.ps1
+   python -m album_printer
+   ```
+
+   To run without activating: `.\\.venv\\Scripts\\python.exe -m album_printer`
 
 ## Google Photos setup
 
