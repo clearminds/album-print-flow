@@ -322,6 +322,27 @@ def date_used_and_source_for_path(
     return datetime.fromtimestamp(path.stat().st_mtime), "Modified"
 
 
+def path_needs_date_check(window: Any, path: Path) -> bool:
+    """True when the date shown is file modified time and may need manual verification."""
+    _dt, source = window.date_used_and_source_for_path(path)
+    return source == "Modified"
+
+
+def path_needs_fix(window: Any, path: Path) -> bool:
+    """True when image needs attention: crop aspect mismatch and/or date may be wrong."""
+    return window.path_needs_crop_for_aspect(path) or window.path_needs_date_check(path)
+
+
+def fix_needed_message_for_path(window: Any, path: Path) -> str:
+    """Short message describing what needs fixing for this image, or empty if nothing."""
+    parts = []
+    if window.path_needs_crop_for_aspect(path):
+        parts.append("Crop aspect mismatch")
+    if window.path_needs_date_check(path):
+        parts.append("Date may be wrong (file date)")
+    return " • ".join(parts) if parts else ""
+
+
 def restore_image_settings_for_selected(
     window: Any,
     *,

@@ -24,6 +24,9 @@ from album_printer.app_rendering_entrypoints import render_preview_image
 from album_printer.processing_settings import ProcessingSettings
 from album_printer.ui.control_visibility_flow import (
     update_aspect_navigation_buttons as update_aspect_navigation_buttons_flow,
+    update_date_check_navigation_buttons as update_date_check_navigation_buttons_flow,
+    update_fix_navigation_buttons as update_fix_navigation_buttons_flow,
+    update_fix_needed_message as update_fix_needed_message_flow,
 )
 from album_printer.ui.crop_reframe_flow import (
     compute_overlay_rect_for_current_crop as compute_overlay_rect_for_current_crop_flow,
@@ -70,7 +73,22 @@ from album_printer.ui.image_navigation_flow import (
     select_previous as select_previous_flow,
 )
 from album_printer.ui.image_navigation_flow import (
+    select_next_date_check as select_next_date_check_flow,
+)
+from album_printer.ui.image_navigation_flow import (
     select_previous_aspect_mismatch as select_previous_aspect_mismatch_flow,
+)
+from album_printer.ui.image_navigation_flow import (
+    select_previous_date_check as select_previous_date_check_flow,
+)
+from album_printer.ui.image_navigation_flow import (
+    select_previous_fix as select_previous_fix_flow,
+)
+from album_printer.ui.image_navigation_flow import (
+    select_next_fix as select_next_fix_flow,
+)
+from album_printer.ui.image_navigation_flow import (
+    select_date_check_mismatch as select_date_check_mismatch_flow,
 )
 from album_printer.ui.image_settings_flow import (
     aspect_ratio_cell_text_for_path as aspect_ratio_cell_text_for_path_flow,
@@ -95,6 +113,15 @@ from album_printer.ui.image_settings_flow import (
 )
 from album_printer.ui.image_settings_flow import (
     set_image_entry_file_hash as set_image_entry_file_hash_flow,
+)
+from album_printer.ui.image_settings_flow import (
+    path_needs_date_check as path_needs_date_check_flow,
+)
+from album_printer.ui.image_settings_flow import (
+    path_needs_fix as path_needs_fix_flow,
+)
+from album_printer.ui.image_settings_flow import (
+    fix_needed_message_for_path as fix_needed_message_for_path_flow,
 )
 from album_printer.ui.image_settings_flow import (
     source_aspect_ratio_label_for_path as source_aspect_ratio_label_for_path_flow,
@@ -174,6 +201,30 @@ def aspect_ratio_cell_text_for_path(window: Any, path: Path) -> str:
 
 def update_aspect_navigation_buttons(window: Any) -> None:
     update_aspect_navigation_buttons_flow(window)
+
+
+def update_date_check_navigation_buttons(window: Any) -> None:
+    update_date_check_navigation_buttons_flow(window)
+
+
+def update_fix_navigation_buttons(window: Any) -> None:
+    update_fix_navigation_buttons_flow(window)
+
+
+def update_fix_needed_message(window: Any) -> None:
+    update_fix_needed_message_flow(window)
+
+
+def path_needs_fix(window: Any, path: Path) -> bool:
+    return path_needs_fix_flow(window, path)
+
+
+def fix_needed_message_for_path(window: Any, path: Path) -> str:
+    return fix_needed_message_for_path_flow(window, path)
+
+
+def path_needs_date_check(window: Any, path: Path) -> bool:
+    return path_needs_date_check_flow(window, path)
 
 
 def image_list_label(window: Any, path: Path) -> str:
@@ -289,7 +340,7 @@ def update_preview_overlay_rect(window: Any) -> None:
 
 
 def on_image_settings_changed(window: Any, *args: object) -> None:
-    on_image_settings_changed_flow(window, *args)
+    on_image_settings_changed_flow(window)
 
 
 def processing_settings_for_path(window: Any, path: Path) -> ProcessingSettings:
@@ -319,7 +370,7 @@ def on_image_table_selection_changed(
     current_row: int,
     *args: object,
 ) -> None:
-    on_image_table_selection_changed_flow(window, current_row, *args)
+    on_image_table_selection_changed_flow(window, current_row)
 
 
 def on_image_table_cell_double_clicked(window: Any, row: int, column: int) -> None:
@@ -343,11 +394,31 @@ def select_aspect_mismatch(window: Any, step: int) -> None:
 
 
 def select_previous_aspect_mismatch(window: Any) -> None:
-    select_previous_aspect_mismatch_flow(window)
+    select_previous_aspect_mismatch_flow(window, table_col_file=TABLE_COL_FILE)
 
 
 def select_next_aspect_mismatch(window: Any) -> None:
-    select_next_aspect_mismatch_flow(window)
+    select_next_aspect_mismatch_flow(window, table_col_file=TABLE_COL_FILE)
+
+
+def select_previous_fix(window: Any) -> None:
+    select_previous_fix_flow(window, table_col_file=TABLE_COL_FILE)
+
+
+def select_next_fix(window: Any) -> None:
+    select_next_fix_flow(window, table_col_file=TABLE_COL_FILE)
+
+
+def select_date_check_mismatch(window: Any, step: int) -> None:
+    select_date_check_mismatch_flow(window, step, table_col_file=TABLE_COL_FILE)
+
+
+def select_previous_date_check(window: Any) -> None:
+    select_previous_date_check_flow(window, table_col_file=TABLE_COL_FILE)
+
+
+def select_next_date_check(window: Any) -> None:
+    select_next_date_check_flow(window, table_col_file=TABLE_COL_FILE)
 
 
 def start_thumbnail_generation(window: Any) -> None:
@@ -399,6 +470,9 @@ __all__ = [
     "on_preview_drag_started",
     "on_preview_dragged",
     "on_thumbnail_ready",
+    "path_needs_date_check",
+    "path_needs_fix",
+    "fix_needed_message_for_path",
     "pick_datetime_override",
     "processing_settings_for_path",
     "refresh_preview",
@@ -410,8 +484,13 @@ __all__ = [
     "select_aspect_mismatch",
     "select_next",
     "select_next_aspect_mismatch",
+    "select_next_date_check",
     "select_previous",
     "select_previous_aspect_mismatch",
+    "select_previous_date_check",
+    "select_previous_fix",
+    "select_next_fix",
+    "select_date_check_mismatch",
     "set_datetime_override_for_path",
     "set_datetime_override_for_selected",
     "set_image_entry_file_hash",
@@ -421,6 +500,9 @@ __all__ = [
     "toggle_crop_orientation",
     "update_aspect_navigation_buttons",
     "update_crop_orientation_button_text",
+    "update_date_check_navigation_buttons",
+    "update_fix_navigation_buttons",
+    "update_fix_needed_message",
     "update_preview_overlay_rect",
     "update_rotate_image_button_text",
 ]

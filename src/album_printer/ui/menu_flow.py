@@ -18,6 +18,10 @@ def setup_menu(
     window.refresh_folder_action.triggered.connect(window.refresh_folder)
     file_menu.addAction(window.refresh_folder_action)
 
+    window.refetch_metadata_action = qaction_cls("Refetch metadata", window)
+    window.refetch_metadata_action.triggered.connect(window.refresh_folder)
+    file_menu.addAction(window.refetch_metadata_action)
+
     window.settings_action = qaction_cls("Settings", window)
     window.settings_action.triggered.connect(window.open_settings_dialog)
     file_menu.addAction(window.settings_action)

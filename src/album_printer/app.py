@@ -444,7 +444,31 @@ from album_printer.ui.main_window_image_entrypoints import (
     select_previous as select_previous_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
+    path_needs_date_check as path_needs_date_check_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    path_needs_fix as path_needs_fix_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    fix_needed_message_for_path as fix_needed_message_for_path_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
     select_previous_aspect_mismatch as select_previous_aspect_mismatch_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    select_previous_date_check as select_previous_date_check_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    select_previous_fix as select_previous_fix_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    select_next_fix as select_next_fix_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    select_next_date_check as select_next_date_check_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    select_date_check_mismatch as select_date_check_mismatch_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     set_datetime_override_for_path as set_datetime_override_for_path_entrypoint,
@@ -469,6 +493,15 @@ from album_printer.ui.main_window_image_entrypoints import (
 )
 from album_printer.ui.main_window_image_entrypoints import (
     update_aspect_navigation_buttons as update_aspect_navigation_buttons_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    update_date_check_navigation_buttons as update_date_check_navigation_buttons_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    update_fix_navigation_buttons as update_fix_navigation_buttons_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    update_fix_needed_message as update_fix_needed_message_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     update_crop_orientation_button_text as update_crop_orientation_text_entrypoint,
@@ -1371,11 +1404,29 @@ class MainWindow(QMainWindow):
     def path_needs_crop_for_aspect(self, path: Path) -> bool:
         return path_needs_crop_for_aspect_entrypoint(self, path)
 
+    def path_needs_date_check(self, path: Path) -> bool:
+        return path_needs_date_check_entrypoint(self, path)
+
+    def path_needs_fix(self, path: Path) -> bool:
+        return path_needs_fix_entrypoint(self, path)
+
+    def fix_needed_message_for_path(self, path: Path) -> str:
+        return fix_needed_message_for_path_entrypoint(self, path)
+
     def aspect_ratio_cell_text_for_path(self, path: Path) -> str:
         return aspect_ratio_cell_text_for_path_entrypoint(self, path)
 
     def update_aspect_navigation_buttons(self) -> None:
         update_aspect_navigation_buttons_entrypoint(self)
+
+    def update_date_check_navigation_buttons(self) -> None:
+        update_date_check_navigation_buttons_entrypoint(self)
+
+    def update_fix_navigation_buttons(self) -> None:
+        update_fix_navigation_buttons_entrypoint(self)
+
+    def update_fix_needed_message(self) -> None:
+        update_fix_needed_message_entrypoint(self)
 
     def photo_entry_for_path(self, path: Path) -> dict[str, object]:
         return photo_entry_for_path_entrypoint(self, path)
@@ -1601,6 +1652,12 @@ class MainWindow(QMainWindow):
 
     def select_next_aspect_mismatch(self) -> None:
         select_next_aspect_mismatch_entrypoint(self)
+
+    def select_previous_fix(self) -> None:
+        select_previous_fix_entrypoint(self)
+
+    def select_next_fix(self) -> None:
+        select_next_fix_entrypoint(self)
 
     def populate_printers_combo(self, combo: QComboBox) -> None:
         populate_printers_combo_entrypoint(self, combo)

@@ -158,6 +158,10 @@ def handle_refresh_folder(window: Any, refresh_worker_cls: Any) -> None:
 
     window.refresh_folder_button.setEnabled(False)
     window.refresh_folder_action.setEnabled(False)
+    if hasattr(window, "refetch_metadata_button"):
+        window.refetch_metadata_button.setEnabled(False)
+    if hasattr(window, "refetch_metadata_action"):
+        window.refetch_metadata_action.setEnabled(False)
     window.statusBar().showMessage("Quick reload running in background…")
     window.append_log(
         "DEBUG",
@@ -190,6 +194,8 @@ def handle_source_refresh_finished(
     window.update_album_sync_stop_availability()
     window.refresh_folder_button.setEnabled(True)
     window.refresh_folder_action.setEnabled(True)
+    from album_printer.ui.control_visibility_flow import update_folder_settings_availability
+    update_folder_settings_availability(window)
 
     if error is not None:
         if isinstance(error, OSError):

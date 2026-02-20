@@ -100,3 +100,6 @@ def open_source_guide_dialog(window: Any) -> None:
     root_layout.addWidget(buttons)
 
     dialog.exec()
+
+
+__all__ = ["open_source_guide_dialog"]

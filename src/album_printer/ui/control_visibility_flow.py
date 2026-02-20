@@ -32,7 +32,8 @@ def update_controls_visibility(window: Any) -> None:
     window.controls_widget.setVisible(has_selection)
     if not has_selection and window.crop_reframe_button.isChecked():
         window.crop_reframe_button.setChecked(False)
-    window.update_aspect_navigation_buttons()
+    window.update_fix_navigation_buttons()
+    window.update_fix_needed_message()
 
 
 def update_folder_settings_availability(window: Any) -> None:
@@ -41,27 +42,56 @@ def update_folder_settings_availability(window: Any) -> None:
     available = window.current_source_context_id is not None
     window.refresh_folder_button.setEnabled(available)
     window.refresh_folder_action.setEnabled(available)
+    url_source = getattr(window, "current_source_id", None) == "google-photos-album-url"
+    if hasattr(window, "refetch_metadata_button"):
+        window.refetch_metadata_button.setEnabled(available and url_source)
+    if hasattr(window, "refetch_metadata_action"):
+        window.refetch_metadata_action.setEnabled(available and url_source)
 
 
 def update_aspect_navigation_buttons(window: Any) -> None:
+    """Legacy: now unified with fix navigation."""
+    update_fix_navigation_buttons(window)
+
+
+def update_date_check_navigation_buttons(window: Any) -> None:
+    """Legacy: now unified with fix navigation."""
+    update_fix_navigation_buttons(window)
+
+
+def update_fix_navigation_buttons(window: Any) -> None:
+    """Enable Prev/Next need fix when any image has crop or date issue."""
     has_images = bool(window.image_paths)
-    has_mismatch = False
+    has_any_fix = False
     for path in window.image_paths:
-        cached_values = window.cached_table_values_for_path(path)
-        if cached_values is None:
-            continue
-        _date_text, _location_text, aspect_text = cached_values
-        if "⚠" in aspect_text:
-            has_mismatch = True
+        if window.path_needs_fix(path):
+            has_any_fix = True
             break
-    enabled = bool(has_images and has_mismatch)
-    window.crop_prev_mismatch_button.setEnabled(enabled)
-    window.crop_next_mismatch_button.setEnabled(enabled)
+    enabled = bool(has_images and has_any_fix)
+    if hasattr(window, "prev_fix_button"):
+        window.prev_fix_button.setEnabled(enabled)
+    if hasattr(window, "next_fix_button"):
+        window.next_fix_button.setEnabled(enabled)
+
+
+def update_fix_needed_message(window: Any) -> None:
+    """Set the fix-needed label to what’s wrong with the current image, or empty."""
+    if not hasattr(window, "fix_needed_label"):
+        return
+    path = window.selected_path()
+    if path is None:
+        window.fix_needed_label.setText("")
+        return
+    msg = window.fix_needed_message_for_path(path)
+    window.fix_needed_label.setText(msg if msg else "—")
 
 
 __all__ = [
     "update_aspect_navigation_buttons",
     "update_controls_visibility",
+    "update_date_check_navigation_buttons",
     "update_folder_settings_availability",
+    "update_fix_navigation_buttons",
+    "update_fix_needed_message",
     "update_queue_panel_max_width",
 ]

@@ -4,9 +4,10 @@ import hashlib
 import html
 import json
 import re
+import urllib.parse
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
@@ -143,6 +144,70 @@ def _gps_decimal(ref: object, value: object) -> float | None:
     return sign * degrees
 
 
+def _extract_dates_from_embedded_json(
+    html_text: str,
+    debug_lines: list[str] | None = None,
+) -> dict[str, datetime]:
+    """Scan HTML for embedded JSON/data: URL + Unix ms timestamp proximity in script blocks and whole page."""
+    normalized = (
+        html_text.replace("\\/", "/")
+        .replace("\\u003d", "=")
+        .replace("\\u0026", "&")
+    )
+    url_pattern = re.compile(
+        r"https://lh3\.googleusercontent\.com/pw/[^\"'\s)]+",
+        re.IGNORECASE,
+    )
+    unix_ms_pattern = re.compile(r"\b(1[56]\d{12})\b")
+    result: dict[str, datetime] = {}
+    script_block_count = 0
+    urls_in_scripts = 0
+    dates_from_scripts = 0
+    dates_from_whole = 0
+
+    def scan_region(region: str, from_script: bool) -> None:
+        nonlocal urls_in_scripts, dates_from_scripts, dates_from_whole
+        for url_m in url_pattern.finditer(region):
+            if from_script:
+                urls_in_scripts += 1
+            base = url_m.group(0).split("=", 1)[0].strip()
+            if not base:
+                continue
+            start = max(0, url_m.start() - 400)
+            end = min(len(region), url_m.end() + 400)
+            window = region[start:end]
+            for ts_m in unix_ms_pattern.finditer(window):
+                try:
+                    ts_ms = int(ts_m.group(1))
+                    dt = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc)
+                    if 2000 <= dt.year <= 2030 and base not in result:
+                        result[base] = dt
+                        if from_script:
+                            dates_from_scripts += 1
+                        else:
+                            dates_from_whole += 1
+                        break
+                except (ValueError, OSError):
+                    pass
+
+    for script in re.finditer(
+        r"<script[^>]*>([^<]*)</script>",
+        normalized,
+        re.IGNORECASE | re.DOTALL,
+    ):
+        script_block_count += 1
+        scan_region(script.group(1), from_script=True)
+    scan_region(normalized, from_script=False)
+
+    if debug_lines is not None:
+        debug_lines.append(
+            f"embedded_json: {script_block_count} script block(s), "
+            f"URLs in scripts={urls_in_scripts}, dates from scripts={dates_from_scripts}, "
+            f"dates from whole page={dates_from_whole}, total url->date={len(result)}"
+        )
+    return result
+
+
 def _guess_extension(content_type: str, payload: bytes) -> str:
     content_type_lower = content_type.lower()
     if "heif" in content_type_lower or "heic" in content_type_lower:
@@ -253,6 +318,31 @@ class GooglePhotosAlbumUrlSource:
 
     def cache_root(self) -> Path:
         return Path.home() / ".cache" / self.app_name / "google-photos-albums"
+
+    def _debug_dump_dir(self) -> Path:
+        """Directory for BatchExecute debug dumps (HTML, response). Created on write."""
+        return Path.home() / ".cache" / self.app_name / "debug"
+
+    def _write_debug_file(
+        self,
+        name_prefix: str,
+        content: str,
+        *,
+        max_bytes: int | None = 2_000_000,
+    ) -> Path | None:
+        """Write content to a timestamped file in debug dump dir. Returns path or None."""
+        try:
+            directory = self._debug_dump_dir()
+            directory.mkdir(parents=True, exist_ok=True)
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = directory / f"{name_prefix}_{ts}.txt"
+            data = content.encode("utf-8", errors="replace")
+            if max_bytes is not None and len(data) > max_bytes:
+                data = data[:max_bytes] + f"\n\n... truncated (total {len(content)} chars)\n".encode("utf-8")
+            path.write_bytes(data)
+            return path
+        except OSError:
+            return None
 
     def state_path(self) -> Path:
         return self.config_root() / "google_album_url_state.json"
@@ -557,24 +647,251 @@ class GooglePhotosAlbumUrlSource:
             bases.append(base)
         return bases
 
+    def _extract_batchexecute_tokens(
+        self, html_text: str
+    ) -> tuple[str | None, str | None, str | None]:
+        """Extract sid, bl, at from album page HTML for BatchExecute API. Returns (sid, bl, at)."""
+        sid: str | None = None
+        bl: str | None = None
+        at: str | None = None
+        # Normalize escaped quotes so JSON-like blocks match
+        normalized = html_text.replace('\\"', '"')
+        self._debug(f"BatchExecute token extraction: HTML length={len(html_text)}, normalized={len(normalized)}")
+        # sid: long integer (often negative), in a JSON-like "key":"value"
+        for m in re.finditer(r'"([A-Za-z0-9_]+)"\s*:\s*"(-?\d{15,20})"', normalized):
+            val = m.group(2)
+            if val.lstrip("-").isdigit() and len(val) >= 15:
+                sid = val
+                self._debug(f"BatchExecute sid: key={m.group(1)}, value={val[:4]}...{val[-4:] if len(val) > 8 else val}")
+                break
+        if not sid:
+            self._debug("BatchExecute sid: no match (regex for long numeric string)")
+        # bl: build label
+        bl_m = re.search(r"boq_photosuiserver_[a-zA-Z0-9._]+", normalized)
+        if bl_m:
+            bl = bl_m.group(0)
+            self._debug(f"BatchExecute bl: {bl}")
+        else:
+            self._debug("BatchExecute bl: no match (boq_photosuiserver_*)")
+        # at: anti-forgery token like "xxx:1771545891948"
+        for m in re.finditer(
+            r'"([A-Za-z0-9_]+)"\s*:\s*"([A-Za-z0-9_-]+:\d{13})"', normalized
+        ):
+            at = m.group(2)
+            self._debug(f"BatchExecute at: key={m.group(1)}, value={at[:24]}...:{at.split(':')[-1] if ':' in at else '?'}")
+            break
+        if not at:
+            self._debug(
+                "BatchExecute at: no match (token not in initial HTML when using requests; "
+                "will try POST without at)"
+            )
+        return (sid, bl, at)
+
+    def _extract_batchexecute_user_id(self, html_text: str, sid: str | None) -> str | None:
+        """Extract user id (long numeric string) from album HTML for eNG3nf body. HAR uses e.g. 113594502061833673830."""
+        normalized = html_text.replace('\\"', '"')
+        # Prefer a 18-22 digit string in JSON-like "key":"value" that is not sid
+        for m in re.finditer(r'"([A-Za-z0-9_]+)"\s*:\s*"(\d{18,22})"', normalized):
+            val = m.group(2)
+            if val != (sid or "").lstrip("-"):
+                return val
+        return None
+
+    def _fetch_batchexecute_eng3nf(
+        self,
+        session: requests.Session,
+        resolved_url: str,
+        sid: str,
+        bl: str,
+        user_id: str,
+        at: str | None,
+    ) -> bool:
+        """POST BatchExecute eNG3nf first (HAR order). Returns True if response OK. Establishes session for yQelMe."""
+        parsed = urllib.parse.urlparse(resolved_url)
+        path = parsed.path or "/"
+        if not path.startswith("/"):
+            path = "/" + path
+        base = "https://photos.google.com/_/PhotosUi/data/batchexecute"
+        params = {
+            "rpcids": "eNG3nf",
+            "source-path": path,
+            "f.sid": sid,
+            "bl": bl,
+            "hl": "en",
+            "soc-app": "165",
+            "soc-platform": "1",
+            "soc-device": "1",
+            "rt": "c",
+        }
+        url = f"{base}?{urllib.parse.urlencode(params)}"
+        # eNG3nf body from HAR: [[[null,"USER_ID"]],[null,[],[null,...],...]
+        inner = (
+            '[[[[null,"'
+            + user_id
+            + '"]],[null,[],[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[],[]],[null,null,[[]]],null,null,null,null,null,null,null,null,null,null,null,[]]]]'
+        )
+        body: dict[str, str] = {
+            "f.req": json.dumps([[["eNG3nf", inner, None, "generic"]]]),
+        }
+        if at:
+            body["at"] = at
+        try:
+            resp = session.post(
+                url,
+                data=body,
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "User-Agent": session.headers.get("User-Agent", "Mozilla/5.0"),
+                },
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            self._debug(f"BatchExecute eNG3nf POST exception: {e}")
+            return False
+        if not resp.ok:
+            self._debug(f"BatchExecute eNG3nf HTTP {resp.status_code}, body start: {resp.text[:300]!r}")
+            return False
+        self._debug("BatchExecute eNG3nf: 200 OK (session step done)")
+        return True
+
+    def _fetch_batchexecute_yqelme(
+        self,
+        session: requests.Session,
+        resolved_url: str,
+        sid: str,
+        bl: str,
+        at: str | None,
+    ) -> str | None:
+        """POST BatchExecute yQelMe RPC to get album items with timestamps. Returns response text or None.
+        at (anti-forgery token) may be None when HTML is served without it (e.g. requests without browser cookies).
+        """
+        # source-path: /share/AF1Qip... from resolved_url
+        parsed = urllib.parse.urlparse(resolved_url)
+        path = parsed.path or "/"
+        if not path.startswith("/"):
+            path = "/" + path
+        base = "https://photos.google.com/_/PhotosUi/data/batchexecute"
+        params = {
+            "rpcids": "yQelMe",
+            "source-path": path,
+            "f.sid": sid,
+            "bl": bl,
+            "hl": "en",
+            "soc-app": "165",
+            "soc-platform": "1",
+            "soc-device": "1",
+            "rt": "c",
+        }
+        url = f"{base}?{urllib.parse.urlencode(params)}"
+        body: dict[str, str] = {
+            "f.req": json.dumps([[["yQelMe", "[null,null,null,[[1,null,1]]]", None, "generic"]]]),
+        }
+        if at:
+            body["at"] = at
+        else:
+            self._debug("BatchExecute: POST without at parameter")
+        try:
+            resp = session.post(
+                url,
+                data=body,
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "User-Agent": session.headers.get("User-Agent", "Mozilla/5.0"),
+                },
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            self._debug(f"BatchExecute POST exception: {e}")
+            return None
+        if not resp.ok:
+            self._debug(f"BatchExecute POST HTTP {resp.status_code}, body start: {resp.text[:400]!r}")
+            return None
+        return resp.text
+
+    def _parse_batchexecute_yqelme_response(
+        self, response_text: str
+    ) -> dict[str, datetime]:
+        """Parse yQelMe BatchExecute response; return map from path (e.g. pw/AP1...) to capture datetime."""
+        out: dict[str, datetime] = {}
+        if not response_text:
+            self._debug("BatchExecute parse: empty response")
+            return out
+        if "yQelMe" not in response_text:
+            self._debug(f"BatchExecute parse: 'yQelMe' not in response (first 200 chars: {response_text[:200]!r})")
+            return out
+        text = response_text
+        if text.startswith(")]}'"):
+            text = text[4:].lstrip()
+        if "\n" in text:
+            parts = text.split("\n", 2)
+            if len(parts) >= 3 and parts[1].isdigit():
+                text = parts[2]
+        normalized = text.replace('\\"', '"')
+        pattern = re.compile(
+            r'"https://photos\.fife\.usercontent\.google\.com/([^"]+)"\s*,\s*null\s*,\s*(\d{13})\s*,'
+        )
+        for m in pattern.finditer(normalized):
+            path_part = m.group(1)
+            ts_ms_str = m.group(2)
+            try:
+                ts_ms = int(ts_ms_str)
+                dt = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc)
+                if not (2000 <= dt.year <= 2030):
+                    continue
+            except (ValueError, OSError):
+                continue
+            base_path = path_part.split("?")[0].strip()
+            if not base_path:
+                continue
+            out[base_path] = dt
+        if not out:
+            self._debug(
+                "BatchExecute parse: 0 URL+timestamp matches (pattern: photos.fife.usercontent.google.com/... ,null, 13-digit-ms)"
+            )
+        return out
+
+    @staticmethod
+    def _lh3_path_from_base_url(base_url: str) -> str:
+        """Return path part of an lh3 base URL for matching with BatchExecute paths."""
+        prefix = "https://lh3.googleusercontent.com/"
+        if base_url.startswith(prefix):
+            return base_url[len(prefix) :].split("?")[0].strip()
+        return base_url.split("?")[0].strip()
+
     def _extract_web_captured_at_map(
         self,
         html_text: str,
         base_urls: list[str],
     ) -> dict[str, datetime]:
+        """Extract capture dates from HTML: ISO dates and Unix ms near each image URL, plus embedded JSON blobs."""
         normalized_html = (
             html_text.replace("\\/", "/")
             .replace("\\u003d", "=")
             .replace("\\u0026", "&")
         )
-        pattern = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z")
         mapping: dict[str, datetime] = {}
         if not normalized_html or not base_urls:
             return mapping
 
+        iso_pattern = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z")
+        unix_ms_pattern = re.compile(r"\b(1[56]\d{12})\b")
+
+        self._debug(
+            f"HTML date extraction: {len(base_urls)} image URL(s), "
+            f"page length={len(normalized_html)}"
+        )
+        missing_snippets_logged = 0
+        max_missing_snippets = 2
+        first_missing_iso: int | None = None
+        first_missing_unix: int | None = None
+        first_missing_snippet: str | None = None
+
         for base_url in base_urls:
             index = normalized_html.find(base_url)
             if index < 0:
+                self._debug(f"  URL not in HTML: {base_url[:80]}...")
                 continue
             start = max(0, index - 2200)
             end = min(len(normalized_html), index + 2200)
@@ -582,19 +899,95 @@ class GooglePhotosAlbumUrlSource:
             center = index - start
 
             best: datetime | None = None
+            best_source: str = ""
             best_distance: int | None = None
-            for match in pattern.finditer(window):
+            iso_count = sum(1 for _ in iso_pattern.finditer(window))
+            unix_matches = list(unix_ms_pattern.finditer(window))
+            unix_count = len(unix_matches)
+
+            for match in iso_pattern.finditer(window):
                 parsed = _parse_iso_datetime(match.group(0))
                 if parsed is None:
                     continue
                 distance = abs(match.start() - center)
                 if best is None or best_distance is None or distance < best_distance:
                     best = parsed
+                    best_source = "iso"
                     best_distance = distance
+            for match in unix_ms_pattern.finditer(window):
+                try:
+                    ts_ms = int(match.group(1))
+                    parsed = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc)
+                    if not (2000 <= parsed.year <= 2030):
+                        continue
+                    distance = abs(match.start() - center)
+                    if best is None or best_distance is None or distance < best_distance:
+                        best = parsed
+                        best_source = "unix_ms"
+                        best_distance = distance
+                except (ValueError, OSError):
+                    pass
 
             if best is not None:
                 mapping[base_url] = best
+                self._debug(
+                    f"  date OK ({best_source} dist={best_distance}): "
+                    f"{best.isoformat(timespec='seconds')} for ...{base_url[-50:]}"
+                )
+            else:
+                if first_missing_snippet is None:
+                    first_missing_iso = iso_count
+                    first_missing_unix = unix_count
+                    snippet_start = max(0, center - 150)
+                    snippet_end = min(len(window), center + 150)
+                    first_missing_snippet = re.sub(
+                        r'\s+', ' ', window[snippet_start:snippet_end]
+                    ).strip()[:280]
+                self._debug(
+                    f"  no date (window: {iso_count} ISO, {unix_count} unix_ms): "
+                    f"...{base_url[-60:]}"
+                )
+                if missing_snippets_logged < max_missing_snippets:
+                    snippet_start = max(0, center - 150)
+                    snippet_end = min(len(window), center + 150)
+                    snippet = window[snippet_start:snippet_end]
+                    snippet_clean = re.sub(r'\s+', ' ', snippet).strip()[:400]
+                    self._debug(
+                        f"  snippet around URL [{snippet_start}:{snippet_end}]: "
+                        f"{snippet_clean!r}"
+                    )
+                    missing_snippets_logged += 1
 
+        embed_debug: list[str] = []
+        embedded = _extract_dates_from_embedded_json(normalized_html, debug_lines=embed_debug)
+        for line in embed_debug:
+            self._debug(f"  {line}")
+        embedded_added = 0
+        for url, dt in embedded.items():
+            if url not in mapping:
+                mapping[url] = dt
+                embedded_added += 1
+        if embedded_added > 0:
+            self._debug(
+                f"  embedded JSON: added {embedded_added} date(s) "
+                f"(total embedded blob had {len(embedded)} URL->date)"
+            )
+
+        with_date = len(mapping)
+        self._info(
+            f"HTML date extraction result: {with_date}/{len(base_urls)} photo(s) with date "
+            f"(window: {with_date - embedded_added}, embedded: {embedded_added})"
+        )
+        if with_date == 0 and base_urls and (
+            first_missing_iso is not None or first_missing_snippet is not None
+        ):
+            self._info(
+                f"First URL window had {first_missing_iso or 0} ISO date(s), "
+                f"{first_missing_unix or 0} unix_ms timestamp(s). "
+                "Enable DEBUG log level for per-URL snippets and full details."
+            )
+            if first_missing_snippet:
+                self._info(f"Sample HTML near first image: {first_missing_snippet!r}")
         return mapping
 
     def _extract_web_location_map(
@@ -1337,11 +1730,17 @@ class GooglePhotosAlbumUrlSource:
             raise RuntimeError("Google Photos album URL is missing")
         return self._load_album(context)
 
-    def _load_album(self, album_url: str) -> SourceLoadResult:
-        self.clear_cancel()
-        self._debug(f"load started url={album_url}")
+    def _fetch_album_page(self, album_url: str) -> tuple[str, str]:
+        """Fetch album page HTML using requests. Returns (resolved_url, html_text)."""
+        session = requests.Session()
+        session.headers.setdefault(
+            "User-Agent",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        )
         try:
-            response = requests.get(album_url, allow_redirects=True, timeout=45)
+            response = session.get(
+                album_url, allow_redirects=True, timeout=45
+            )
         except requests.RequestException as error:
             raise RuntimeError(f"Unable to open album URL: {error}") from error
 
@@ -1349,9 +1748,12 @@ class GooglePhotosAlbumUrlSource:
             raise RuntimeError(
                 f"Unable to open album URL (HTTP {response.status_code})"
             )
+        return self._normalize_share_url(response.url), response.text
 
-        resolved_url = self._normalize_share_url(response.url)
-        html_text = response.text
+    def _load_album(self, album_url: str) -> SourceLoadResult:
+        self.clear_cancel()
+        self._debug(f"load started url={album_url}")
+        resolved_url, html_text = self._fetch_album_page(album_url)
         if (
             "photos.google.com" not in resolved_url
             and "photos.app.goo.gl" not in resolved_url
@@ -1361,7 +1763,7 @@ class GooglePhotosAlbumUrlSource:
         base_urls = self._extract_media_bases(html_text)
         if not base_urls:
             raise RuntimeError("No album media found at URL")
-        web_captured_at_map = self._extract_web_captured_at_map(html_text, base_urls)
+        # Date metadata now comes from manifest/EXIF only for this integration.
         web_location_map = self._extract_web_location_map(html_text, base_urls)
         self._info(f"sync discovered {len(base_urls)} media item(s)")
 
@@ -1417,8 +1819,6 @@ class GooglePhotosAlbumUrlSource:
                     continue
 
                 captured_at = _parse_iso_datetime(previous_entry.get("captured_at"))
-                if captured_at is None:
-                    captured_at = web_captured_at_map.get(base_url)
                 latitude = previous_entry.get("latitude")
                 longitude = previous_entry.get("longitude")
                 lat_value = (
@@ -1431,6 +1831,25 @@ class GooglePhotosAlbumUrlSource:
                     web_location = web_location_map.get(base_url)
                     if web_location is not None:
                         lat_value, lon_value = web_location
+
+                if captured_at is None or lat_value is None or lon_value is None:
+                    extracted_at, extracted_lat, extracted_lon = (
+                        self._extract_file_metadata(local_path)
+                    )
+                    if captured_at is None and extracted_at is not None:
+                        captured_at = extracted_at
+                    if lat_value is None and extracted_lat is not None:
+                        lat_value = extracted_lat
+                    if lon_value is None and extracted_lon is not None:
+                        lon_value = extracted_lon
+
+                if captured_at is not None:
+                    previous_entry["captured_at"] = captured_at.isoformat(
+                        timespec="seconds"
+                    )
+                if lat_value is not None and lon_value is not None:
+                    previous_entry["latitude"] = float(lat_value)
+                    previous_entry["longitude"] = float(lon_value)
 
                 source_data = {
                     "album_url": resolved_url,
@@ -1540,8 +1959,6 @@ class GooglePhotosAlbumUrlSource:
                 new_count += 1
 
             captured_at = _parse_iso_datetime(entry.get("captured_at"))
-            if captured_at is None:
-                captured_at = web_captured_at_map.get(base_url)
             latitude = entry.get("latitude")
             longitude = entry.get("longitude")
             lat_value = float(latitude) if isinstance(latitude, int | float) else None

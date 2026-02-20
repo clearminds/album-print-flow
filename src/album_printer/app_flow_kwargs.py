@@ -355,7 +355,134 @@ def main_window_startup_kwargs(
     }
 
 
+def build_app_flow_kwargs(**kwargs: object) -> dict[str, dict[str, object]]:
+    """Build the full app flow kwargs dict from the flat kwargs passed by app.py."""
+    return {
+        "open_settings_dialog": open_settings_dialog_flow_kwargs(
+            nominatim_default_reverse_url=kwargs["nominatim_default_reverse_url"],
+            nominatim_auth_modes=kwargs["nominatim_auth_modes"],
+            nominatim_zoom_level_options=kwargs["nominatim_zoom_level_options"],
+            app_version_fn=kwargs["app_version_fn"],
+            open_settings_dialog_ui_fn=kwargs["open_settings_dialog_ui_fn"],
+        ),
+        "open_project_settings_dialog": open_project_settings_dialog_flow_kwargs(
+            crop_ratios=kwargs["crop_ratios"],
+            crop_ratio_labels=kwargs["crop_ratio_labels"],
+            location_format_options=kwargs["location_format_options"],
+            location_format_template_default=kwargs["location_format_template_default"],
+            location_template_tokens=kwargs["location_template_tokens"],
+            stamp_fonts=kwargs["stamp_fonts"],
+            stamp_scale_min_percent=kwargs["stamp_scale_min_percent"],
+            stamp_scale_max_percent=kwargs["stamp_scale_max_percent"],
+            stamp_offset_min_px=kwargs["stamp_offset_min_px"],
+            stamp_offset_max_px=kwargs["stamp_offset_max_px"],
+            default_stamp_color=kwargs["default_stamp_color"],
+            default_stamp_border_color=kwargs["default_stamp_border_color"],
+            processing_settings_cls=kwargs["processing_settings_cls"],
+            load_image_as_rgb_fn=kwargs["load_image_as_rgb_fn"],
+            normalized_geocodejson_geocoding_fn=kwargs["normalized_geocodejson_geocoding_fn"],
+            normalized_geocodejson_feature_fn=kwargs["normalized_geocodejson_feature_fn"],
+            render_location_template_fn=kwargs["render_location_template_fn"],
+            location_format_needs_reverse_lookup_fn=kwargs[
+                "location_format_needs_reverse_lookup_fn"
+            ],
+            datetime_for_image_fn=kwargs["datetime_for_image_fn"],
+            center_crop_to_ratio_fn=kwargs["center_crop_to_ratio_fn"],
+            apply_stamp_fn=kwargs["apply_stamp_fn"],
+            open_project_settings_dialog_ui_fn=kwargs[
+                "open_project_settings_dialog_ui_fn"
+            ],
+        ),
+        "open_print_settings_dialog": open_print_settings_dialog_flow_kwargs(
+            print_backends=kwargs["print_backends"],
+            ipp_backend_error_cls=kwargs["ipp_backend_error_cls"],
+            get_ipp_capabilities_fn=kwargs["get_ipp_capabilities_fn"],
+            pretty_option_label_fn=kwargs["pretty_option_label_fn"],
+            is_explicit_borderless_media_fn=kwargs["is_explicit_borderless_media_fn"],
+            resolve_cups_media_value_fn=kwargs["resolve_cups_media_value_fn"],
+            open_print_settings_dialog_ui_fn=kwargs[
+                "open_print_settings_dialog_ui_fn"
+            ],
+        ),
+        "load_google_photos_album_url": load_google_photos_album_url_flow_kwargs(
+            worker_cls=kwargs["source_load_worker_cls"],
+        ),
+        "refresh_folder": refresh_folder_flow_kwargs(
+            refresh_worker_cls=kwargs["source_refresh_worker_cls"],
+        ),
+        "print_borderless_calibration": print_borderless_calibration_flow_kwargs(
+            media_size_mm_from_value_fn=kwargs["media_size_mm_from_value_fn"],
+            create_borderless_calibration_image_fn=kwargs[
+                "create_borderless_calibration_image_fn"
+            ],
+            apply_borderless_content_scale_fn=kwargs[
+                "apply_borderless_content_scale_fn"
+            ],
+            parse_cups_request_id_fn=kwargs["parse_cups_request_id_fn"],
+        ),
+        "print_all_via_cups": print_all_via_cups_flow_kwargs(
+            resolve_cups_media_value_fn=kwargs["resolve_cups_media_value_fn"],
+            render_image_fn=kwargs["render_image_fn"],
+            apply_borderless_content_scale_fn=kwargs[
+                "apply_borderless_content_scale_fn"
+            ],
+            parse_cups_request_id_fn=kwargs["parse_cups_request_id_fn"],
+            query_cups_job_status_text_fn=kwargs["query_cups_job_status_text_fn"],
+        ),
+        "print_all_via_qt": print_all_via_qt_flow_kwargs(
+            media_size_mm_from_value_fn=kwargs["media_size_mm_from_value_fn"],
+            render_image_fn=kwargs["render_image_fn"],
+            ratios_match_either_orientation_fn=kwargs[
+                "ratios_match_either_orientation_fn"
+            ],
+        ),
+        "print_all_via_ipp": print_all_via_ipp_flow_kwargs(
+            render_image_fn=kwargs["render_image_fn"],
+            print_jobs_via_ipp_fn=kwargs["print_jobs_via_ipp_fn"],
+            ipp_backend_error_cls=kwargs["ipp_backend_error_cls"],
+        ),
+        "main_window_startup": main_window_startup_kwargs(
+            app_display_name=kwargs["app_display_name"],
+            app_window_icon_fn=kwargs["app_window_icon_fn"],
+            ipp_capabilities_cls=kwargs["ipp_capabilities_cls"],
+            source_registry_cls=kwargs["source_registry_cls"],
+            folder_source_cls=kwargs["folder_source_cls"],
+            google_photos_source_cls=kwargs["google_photos_source_cls"],
+            google_photos_album_url_source_cls=kwargs[
+                "google_photos_album_url_source_cls"
+            ],
+            supported_extensions=kwargs["supported_extensions"],
+            load_source_state_fn=kwargs["load_source_state_fn"],
+            settings_org=kwargs["settings_org"],
+            settings_app=kwargs["settings_app"],
+            thumbnail_size=kwargs["thumbnail_size"],
+            nominatim_default_reverse_url=kwargs["nominatim_default_reverse_url"],
+            nominatim_default_rate_limit_seconds=kwargs[
+                "nominatim_default_rate_limit_seconds"
+            ],
+            location_format_template_default=kwargs[
+                "location_format_template_default"
+            ],
+            default_stamp_color=kwargs["default_stamp_color"],
+            default_stamp_border_color=kwargs["default_stamp_border_color"],
+            table_col_thumb=kwargs["table_col_thumb"],
+            table_col_state=kwargs["table_col_state"],
+            table_col_print=kwargs["table_col_print"],
+            table_col_file=kwargs["table_col_file"],
+            table_col_date_used=kwargs["table_col_date_used"],
+            table_col_location=kwargs["table_col_location"],
+            table_col_aspect=kwargs["table_col_aspect"],
+            reframe_handle_size=kwargs["reframe_handle_size"],
+            per_image_location_stamp_overrides=kwargs[
+                "per_image_location_stamp_overrides"
+            ],
+            log_levels=kwargs["log_levels"],
+        ),
+    }
+
+
 __all__ = [
+    "build_app_flow_kwargs",
     "current_table_metadata_batch_size_flow_kwargs",
     "date_used_and_source_flow_kwargs",
     "effective_location_format_flow_kwargs",

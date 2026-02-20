@@ -180,10 +180,12 @@ def process_table_metadata_batch(
                 continue
 
             try:
-                date_used, _date_source = window.date_used_and_source_for_path(path)
+                date_used, date_source = window.date_used_and_source_for_path(path)
                 location_status = window.location_lookup_status_for_path(path)
                 aspect_text = window.aspect_ratio_cell_text_for_path(path)
                 date_text = date_used.strftime("%Y-%m-%d %H:%M")
+                if date_source == "Modified":
+                    date_text = f"{date_text} ⚠ Check date"
             except Exception as error:
                 window.table_metadata_skipped_paths += 1
                 window.append_log(

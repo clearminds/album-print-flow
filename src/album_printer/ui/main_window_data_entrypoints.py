@@ -236,6 +236,8 @@ def process_table_metadata_batch(window: Any) -> None:
         batch_size_scrolling=TABLE_METADATA_BATCH_SIZE_SCROLLING,
         batch_size_idle=TABLE_METADATA_BATCH_SIZE_IDLE,
     )
+    window.update_fix_navigation_buttons()
+    window.update_fix_needed_message()
 
 
 def rebuild_image_row_lookup(window: Any) -> None:

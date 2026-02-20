@@ -6,7 +6,9 @@ from album_printer.ui.status_presenter import present_status
 
 
 def update_album_sync_stop_availability(window: Any) -> None:
-    adapter = window.source_registry.get("google-photos-album-url")
+    adapter = window.active_source_load_adapter
+    if adapter is None:
+        adapter = window.source_registry.get("google-photos-album-url")
     running = window.source_load_in_progress or window.source_refresh_in_progress
     can_cancel = callable(getattr(adapter, "request_cancel", None))
     window.stop_album_sync_button.setEnabled(bool(running and can_cancel))
@@ -35,7 +37,9 @@ def stop_album_sync(window: Any) -> None:
         window.stop_album_sync_button.setEnabled(False)
         return
 
-    adapter = window.source_registry.get("google-photos-album-url")
+    adapter = window.active_source_load_adapter
+    if adapter is None:
+        adapter = window.source_registry.get("google-photos-album-url")
     cancel_method = getattr(adapter, "request_cancel", None)
     if not callable(cancel_method):
         present_status(

@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QMessageBox
 
 from album_printer.sources.types import SourceLoadResult
 
+GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID = "google-photos-album-url"
+
 
 def handle_process_album_sync_live_snapshot(window: Any) -> None:
     if not (window.source_load_in_progress or window.source_refresh_in_progress):
@@ -14,7 +16,13 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
     if not window.album_sync_live_url:
         return
 
-    adapter = window.source_registry.get("google-photos-album-url")
+    adapter = window.active_source_load_adapter
+    adapter_source_id = str(getattr(adapter, "source_id", "") or "")
+    if adapter_source_id not in {
+        GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID,
+        GOOGLE_ALBUM_URL_PLAYWRIGHT_SOURCE_ID,
+    }:
+        adapter = window.source_registry.get(GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID)
     if adapter is None:
         return
 
@@ -41,7 +49,11 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
         return
 
     active_same_context = (
-        window.current_source_id == "google-photos-album-url"
+        window.current_source_id
+        in {
+            GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID,
+            GOOGLE_ALBUM_URL_PLAYWRIGHT_SOURCE_ID,
+        }
         and bool(live_context_id)
         and window.current_source_context_id == live_context_id
     )
@@ -130,7 +142,7 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
 
 
 def handle_load_google_photos_album_url(window: Any, worker_cls: Any) -> None:
-    adapter = window.source_registry.get("google-photos-album-url")
+    adapter = window.source_registry.get(GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID)
     if adapter is None:
         QMessageBox.warning(
             window,
