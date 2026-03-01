@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-album-print-flow = "album_printer.main:main"
+album-print-flow = "album_print_flow.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -69,7 +69,7 @@ author_email = "info@clearminds.se"
 formal_name = "Album Print Flow"
 description = "Crop, stamp and print photo albums"
 icon = "assets/icons/png/app-icon"
-sources = ["src/album_printer"]
+sources = ["src/album_print_flow"]
 requires = [
     "Pillow>=11.0.0",
     "PySide6>=6.8.0",

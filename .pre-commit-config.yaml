@@ -12,7 +12,7 @@ repos:
       - id: debug-statements
       - id: check-merge-conflict
       - id: check-added-large-files
-        exclude: ^src/album_printer/fonts/PhotoStampMono\.ttf$
+        exclude: ^src/album_print_flow/fonts/PhotoStampMono\.ttf$
 
   - repo: https://github.com/psf/black
     rev: 25.1.0

@@ -11,12 +11,12 @@ will fail when the app calls Google Photos endpoints.
 
 Place your bundled Google OAuth Desktop client JSON at:
 
-- `src/album_printer/oauth/google_client_secret.json`
+- `src/album_print_flow/oauth/google_client_secret.json`
 
 Resolution order used by the app:
 
 1. `ALBUM_PRINTER_GOOGLE_CLIENT_SECRET_FILE` (explicit override)
 2. `~/.config/album-print-flow/google_client_secret.json`
-3. Bundled file inside app package/resources (`album_printer/oauth/google_client_secret.json`)
+3. Bundled file inside app package/resources (`album_print_flow/oauth/google_client_secret.json`)
 
 Do not commit real secrets to public repositories.
