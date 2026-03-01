@@ -1,13 +1,10 @@
 name: Dev Build
 
 on:
+  pull_request:
   push:
-    branches:
-      - "development"
-      - "feature/*"
     tags:
       - "v*-dev*"
-  pull_request:
   workflow_dispatch:
 
 concurrency:
