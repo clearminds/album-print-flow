@@ -1,5 +1,5 @@
 Pillow>=11.0.0
-PySide6>=6.8.0
+PySide6>=6.7.3
 pyipp>=0.17.2
 google-auth>=2.40.0
 google-auth-oauthlib>=1.2.2
