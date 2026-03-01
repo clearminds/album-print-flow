@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "Pillow>=12.1.1",
-  "PySide6>=6.10.2",
+  "PySide6>=6.7.3",
   "pyipp>=0.17.2",
   "google-auth>=2.48.0",
   "google-auth-oauthlib>=1.3.0",
@@ -72,7 +72,7 @@ icon = "assets/icons/png/app-icon"
 sources = ["src/album_print_flow"]
 requires = [
     "Pillow>=12.1.1",
-    "PySide6>=6.10.2",
+    "PySide6>=6.7.3",
     "pyipp>=0.17.2",
     "google-auth>=2.48.0",
     "google-auth-oauthlib>=1.3.0",
