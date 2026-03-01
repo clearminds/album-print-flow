@@ -49,7 +49,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .[dev]
-PYTHONPATH=src python -m album_printer
+PYTHONPATH=src python -m album_print_flow
 ```
 
 **Windows (PowerShell):**
@@ -65,10 +65,10 @@ PYTHONPATH=src python -m album_printer
 
    ```powershell
    .\.venv\Scripts\Activate.ps1
-   python -m album_printer
+   python -m album_print_flow
    ```
 
-   To run without activating: `.\\.venv\\Scripts\\python.exe -m album_printer`
+   To run without activating: `.\\.venv\\Scripts\\python.exe -m album_print_flow`
 
 ## Google Photos setup
 
@@ -116,7 +116,7 @@ Credential file resolution order:
 
 1. `ALBUM_PRINTER_GOOGLE_CLIENT_SECRET_FILE` (explicit override)
 2. `~/.config/album-print-flow/google_client_secret.json`
-3. Bundled app resource: `album_printer/oauth/google_client_secret.json`
+3. Bundled app resource: `album_print_flow/oauth/google_client_secret.json`
 
 ### If you see “Google OAuth client file not found”
 
@@ -133,7 +133,7 @@ cp /path/to/your/google-client-secret.json ~/.config/album-print-flow/google_cli
 
 ```bash
 export ALBUM_PRINTER_GOOGLE_CLIENT_SECRET_FILE="/absolute/path/to/google-client-secret.json"
-PYTHONPATH=src python -m album_printer
+PYTHONPATH=src python -m album_print_flow
 ```
 
 Checklist:
@@ -147,7 +147,7 @@ Notes:
 - OAuth token is stored in OS keychain/secret manager when available, with fallback file cache at `~/.config/album-print-flow/google_token.json`.
 - Google album cache is stored under `~/.cache/album-print-flow/google-photos/`.
 - Cross-import Google photo continuity state is stored at `~/.config/album-print-flow/source_state.json`.
-- To bundle default OAuth credentials for distribution, place the JSON at `src/album_printer/oauth/google_client_secret.json` before packaging.
+- To bundle default OAuth credentials for distribution, place the JSON at `src/album_print_flow/oauth/google_client_secret.json` before packaging.
 
 ## Pre-commit checks
 
@@ -195,7 +195,7 @@ Both run with `PYTHONPATH=src` in the integrated terminal.
 
 ```bash
 source .venv/bin/activate
-pyinstaller --noconfirm --clean --name album-printer --windowed --paths src --collect-data album_printer src/album_printer/main.py
+pyinstaller --noconfirm --clean --name album-printer --windowed --paths src --collect-data album_print_flow src/album_print_flow/main.py
 ```
 
 Output bundle is in `dist/`:
@@ -282,7 +282,7 @@ Location is currently rendered as coordinate text (Lat/Lon or DMS based on setti
 
 The album URL loader does **not** use a public Google JSON endpoint. It requests album HTML and extracts data heuristically.
 
-Implementation: [src/album_printer/sources/google_photos_album_url_source.py](src/album_printer/sources/google_photos_album_url_source.py)
+Implementation: [src/album_print_flow/sources/google_photos_album_url_source.py](src/album_print_flow/sources/google_photos_album_url_source.py)
 
 ### Data extracted from album HTML
 

@@ -9,14 +9,14 @@ description = "Linux-first photo crop/stamp/print tool"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "Pillow>=11.0.0",
-  "PySide6>=6.8.0",
+  "Pillow>=12.1.1",
+  "PySide6>=6.7.3",
   "pyipp>=0.17.2",
-  "google-auth>=2.40.0",
-  "google-auth-oauthlib>=1.2.2",
-  "keyring>=25.6.0",
-  "pillow-heif>=0.18.0",
-  "rawpy>=0.25.1",
+  "google-auth>=2.48.0",
+  "google-auth-oauthlib>=1.3.0",
+  "keyring>=25.7.0",
+  "pillow-heif>=1.3.0",
+  "rawpy>=0.26.1",
   "requests>=2.32.5",
 ]
 
@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-album-print-flow = "album_printer.main:main"
+album-print-flow = "album_print_flow.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -53,3 +53,46 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "UP", "B"]
 ignore = ["E203"]
+
+# ── Briefcase packaging ──────────────────────────────────────────────
+
+[tool.briefcase]
+project_name = "Album Print Flow"
+bundle = "se.clearminds"
+version = "1.0.0"
+url = "https://github.com/clearminds/album-print-flow"
+license.file = "LICENSE"
+author = "Clearminds"
+author_email = "info@clearminds.se"
+
+[tool.briefcase.app.album-print-flow]
+formal_name = "Album Print Flow"
+description = "Crop, stamp and print photo albums"
+icon = "assets/icons/png/app-icon"
+sources = ["src/album_print_flow"]
+requires = [
+    "Pillow>=12.1.1",
+    "PySide6>=6.7.3",
+    "pyipp>=0.17.2",
+    "google-auth>=2.48.0",
+    "google-auth-oauthlib>=1.3.0",
+    "keyring>=25.7.0",
+    "pillow-heif>=1.3.0",
+    "rawpy>=0.26.1",
+    "requests>=2.32.5",
+]
+
+[tool.briefcase.app.album-print-flow.macOS]
+universal_build = false
+requires = []
+
+[tool.briefcase.app.album-print-flow.linux]
+requires = []
+
+[tool.briefcase.app.album-print-flow.linux.flatpak]
+flatpak_runtime = "org.kde.Platform"
+flatpak_runtime_version = "6.10"
+flatpak_sdk = "org.kde.Sdk"
+
+[tool.briefcase.app.album-print-flow.windows]
+requires = []

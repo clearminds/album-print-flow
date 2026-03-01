@@ -1,25 +1,47 @@
 name: Dev Build
 
 on:
+  pull_request:
   push:
-    branches:
-      - "development"
-      - "feature/*"
     tags:
       - "v*-dev*"
-  pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: "1"
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  test-and-smoke-build:
-    environment: dev
+  ci:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11"]
+        target: ["Windows", "macOS", "Flatpak"]
+        include:
+          - target: "Windows"
+            output-format: "app"
+            runs-on: "windows-latest"
 
-    runs-on: ${{ matrix.os }}
+          - target: "macOS"
+            output-format: "app"
+            runs-on: "macos-latest"
+
+          - target: "Flatpak"
+            platform: "Linux"
+            output-format: "Flatpak"
+            runs-on: "ubuntu-latest"
+            pre-command: >-
+              sudo apt-get update &&
+              sudo apt-get -y install flatpak flatpak-builder
 
     steps:
       - name: Checkout
@@ -28,31 +50,42 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install Briefcase
+        run: python -m pip install -U pip setuptools wheel briefcase
+
+      - name: Platform setup
+        run: ${{ matrix.pre-command || 'echo ok' }}
+
+      - name: Build
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .[dev]
+          briefcase create \
+            ${{ matrix.platform || matrix.target }} \
+            ${{ matrix.output-format }} \
+            --no-input --log
+          briefcase build \
+            ${{ matrix.platform || matrix.target }} \
+            ${{ matrix.output-format }} \
+            --no-input --log
 
-      - name: Run pre-commit
+      - name: Package
         run: |
-          pre-commit run --all-files --show-diff-on-failure
+          briefcase package \
+            ${{ matrix.platform || matrix.target }} \
+            ${{ matrix.output-format }} \
+            --update --adhoc-sign --no-input --log
 
-      - name: Import smoke test
-        run: |
-          python -c "from album_printer.main import main; print('import-ok')"
-        env:
-          PYTHONPATH: src
-
-      - name: Build app bundle (PyInstaller)
-        run: |
-          pyinstaller --noconfirm --clean --name album-printer --windowed --paths src --collect-data album_printer src/album_printer/main.py
-
-      - name: Upload bundle artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dev-build-${{ github.run_number }}-${{ matrix.os }}
-          path: dist/**
+          name: dev-build-${{ matrix.target }}-${{ github.run_number }}
+          path: dist/
           retention-days: 7
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.target }}
+          path: logs/

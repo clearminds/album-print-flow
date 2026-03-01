@@ -5,7 +5,7 @@
       "name": "Album Print Flow (module)",
       "type": "debugpy",
       "request": "launch",
-      "module": "album_printer",
+      "module": "album_print_flow",
       "console": "integratedTerminal",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/src"
@@ -16,7 +16,7 @@
       "name": "Album Print Flow (file)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/album_printer/main.py",
+      "program": "${workspaceFolder}/src/album_print_flow/main.py",
       "console": "integratedTerminal",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/src"

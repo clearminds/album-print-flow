@@ -25,4 +25,4 @@ fmt:
 check: lint
 
 run:
-	source .venv/bin/activate && PYTHONPATH=src python -m album_printer
+	source .venv/bin/activate && PYTHONPATH=src python -m album_print_flow

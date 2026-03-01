@@ -76,7 +76,7 @@ If sign-in works but picker load fails:
 
 1. `ALBUM_PRINTER_GOOGLE_CLIENT_SECRET_FILE`
 2. `~/.config/album-print-flow/google_client_secret.json`
-3. Bundled resource: `album_printer/oauth/google_client_secret.json`
+3. Bundled resource: `album_print_flow/oauth/google_client_secret.json`
 
 ## Notes
 

@@ -8,7 +8,9 @@ release/
 .pytest_cache/
 .mypy_cache/
 .DS_Store
+.briefcase/
+*.dist-info/
 images/
 *.egg-info/
-src/album_printer.egg-info/
-src/album_printer/oauth/google_client_secret.json
+src/album_print_flow.egg-info/
+src/album_print_flow/oauth/google_client_secret.json

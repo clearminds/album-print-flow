@@ -6,8 +6,8 @@ This file tracks bundled third-party assets and where they come from.
 
 | Local file | Embedded font name | Upstream source | License |
 | --- | --- | --- | --- |
-| `src/album_printer/fonts/ClassicMono.ttf` | Liberation Mono (Regular) | Liberation Fonts project (https://github.com/liberationfonts/liberation-fonts) | SIL Open Font License 1.1 |
-| `src/album_printer/fonts/PhotoStampMono.ttf` | Noto Sans Mono Bold | Google Noto Fonts (https://github.com/notofonts/noto-fonts) | SIL Open Font License 1.1 |
+| `src/album_print_flow/fonts/ClassicMono.ttf` | Liberation Mono (Regular) | Liberation Fonts project (https://github.com/liberationfonts/liberation-fonts) | SIL Open Font License 1.1 |
+| `src/album_print_flow/fonts/PhotoStampMono.ttf` | Noto Sans Mono Bold | Google Noto Fonts (https://github.com/notofonts/noto-fonts) | SIL Open Font License 1.1 |
 
 Notes:
 

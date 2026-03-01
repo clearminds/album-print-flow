@@ -197,7 +197,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ""
 Write-Host "Dev environment ready." -ForegroundColor Green
 Write-Host "Activate with:  .\.venv\Scripts\Activate.ps1" -ForegroundColor Cyan
-Write-Host "Run app:        .\.venv\Scripts\python.exe -m album_printer" -ForegroundColor Cyan
+Write-Host "Run app:        .\.venv\Scripts\python.exe -m album_print_flow" -ForegroundColor Cyan
 Write-Host "Lint:           .\.venv\Scripts\pre-commit run --all-files" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "If 'python' is not found in new terminals, add Python to your user PATH:" -ForegroundColor Gray
