@@ -83,6 +83,7 @@ requires = [
 ]
 
 [tool.briefcase.app.album-print-flow.macOS]
+universal_build = false
 requires = []
 
 [tool.briefcase.app.album-print-flow.linux]
