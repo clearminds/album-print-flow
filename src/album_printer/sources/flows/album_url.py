@@ -18,10 +18,7 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
 
     adapter = window.active_source_load_adapter
     adapter_source_id = str(getattr(adapter, "source_id", "") or "")
-    if adapter_source_id not in {
-        GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID,
-        GOOGLE_ALBUM_URL_PLAYWRIGHT_SOURCE_ID,
-    }:
+    if adapter_source_id != GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID:
         adapter = window.source_registry.get(GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID)
     if adapter is None:
         return
@@ -49,11 +46,7 @@ def handle_process_album_sync_live_snapshot(window: Any) -> None:
         return
 
     active_same_context = (
-        window.current_source_id
-        in {
-            GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID,
-            GOOGLE_ALBUM_URL_PLAYWRIGHT_SOURCE_ID,
-        }
+        window.current_source_id == GOOGLE_ALBUM_URL_REQUESTS_SOURCE_ID
         and bool(live_context_id)
         and window.current_source_context_id == live_context_id
     )

@@ -241,6 +241,59 @@ def query_cups_job_status_text(request_id: str) -> str:
     return lines[header_index].strip()
 
 
+def query_cups_job_state(request_id: str) -> str:
+    """Return a structured CUPS job state for the given request ID.
+
+    Returns one of: "completed", "processing", "pending", "canceled",
+    "aborted", "not-found".
+    """
+    job = (request_id or "").strip()
+    if not job:
+        return "not-found"
+
+    try:
+        result = subprocess.run(
+            ["lpstat", "-W", "all", "-l", "-o"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return "not-found"
+
+    output = (result.stdout or "").strip()
+    if not output:
+        return "not-found"
+
+    lines = output.splitlines()
+    header_index = -1
+    for index, raw in enumerate(lines):
+        line = raw.strip()
+        if line.startswith(job + " ") or line == job:
+            header_index = index
+            break
+
+    if header_index < 0:
+        return "not-found"
+
+    for raw in lines[header_index + 1 :]:
+        if raw and not raw.startswith(" ") and not raw.startswith("\t"):
+            break
+        lowered = raw.strip().lower()
+        if not lowered:
+            continue
+        for state in ("completed", "canceled", "aborted", "processing", "pending"):
+            if state in lowered:
+                return state
+
+    header_lower = lines[header_index].strip().lower()
+    for state in ("completed", "canceled", "aborted", "processing", "pending"):
+        if state in header_lower:
+            return state
+
+    return "pending"
+
+
 def create_borderless_calibration_image(
     width_px: int,
     height_px: int,
@@ -431,6 +484,7 @@ __all__ = [
     "parse_cups_request_id",
     "parse_ipp_job_id",
     "pretty_option_label",
+    "query_cups_job_state",
     "query_cups_job_status_text",
     "resolve_cups_media_value",
 ]

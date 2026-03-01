@@ -130,6 +130,9 @@ def initialize_main_window_state(
     window.print_queue_next_id = 1
     window.print_queue_paused = False
     window.print_queue_processing = False
+    window.cups_job_poll_timer = QTimer(window)
+    window.cups_job_poll_timer.setInterval(3000)
+    window.cups_job_poll_timer.timeout.connect(window.poll_cups_job_statuses)
     window.current_image_orientation = "Landscape"
     window.current_image_rotation_degrees = 0
     window.ui_settings = QSettings(settings_org, settings_app)

@@ -199,6 +199,7 @@ def update_location_status_for_path(
     if item is None:
         return
     item.setText(window.location_lookup_status_for_path(path))
+    window.invalidate_table_cache_for_path(path)
 
 
 __all__ = [

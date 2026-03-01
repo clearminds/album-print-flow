@@ -104,6 +104,9 @@ from album_printer.ui.photo_entry_flow import (
     cached_table_values_for_path as cached_table_values_for_path_flow,
 )
 from album_printer.ui.photo_entry_flow import (
+    invalidate_table_cache_for_path as invalidate_table_cache_for_path_flow,
+)
+from album_printer.ui.photo_entry_flow import (
     photo_entry_for_path as photo_entry_for_path_flow,
 )
 from album_printer.ui.photo_entry_flow import (
@@ -443,6 +446,10 @@ def cached_table_values_for_path(
     return cached_table_values_for_path_flow(window, path)
 
 
+def invalidate_table_cache_for_path(window: Any, path: Path) -> None:
+    invalidate_table_cache_for_path_flow(window, path)
+
+
 def store_table_values_for_path(
     window: Any,
     path: Path,
@@ -485,6 +492,7 @@ def open_print_settings_dialog(window: Any, **kwargs: Any) -> None:
 __all__ = [
     "borderless_enabled",
     "cached_table_values_for_path",
+    "invalidate_table_cache_for_path",
     "cancel_active_source_load_for_switch",
     "clear_footer_progress",
     "copy_location_from_previous_image",

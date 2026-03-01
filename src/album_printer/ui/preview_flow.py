@@ -47,6 +47,7 @@ def on_image_settings_changed(window: Any) -> None:
     )
     window.save_folder_metadata()
     window.sync_global_source_state_from_path(path)
+    window.invalidate_table_cache_for_path(path)
     mode_override = window.location_stamp_override_combo.currentText().strip()
     if mode_override == "Custom Text":
         window.location_value_label.setText(

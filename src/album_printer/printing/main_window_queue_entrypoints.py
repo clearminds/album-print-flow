@@ -4,6 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from album_printer.ipp_backend import IppBackendError, cancel_ipp_job
+from album_printer.printing.flows.cups_job_poll import (
+    poll_cups_job_statuses as poll_cups_job_statuses_flow,
+)
+from album_printer.printing.flows.cups_job_poll import (
+    start_cups_job_poll_if_needed as start_cups_job_poll_if_needed_flow,
+)
 from album_printer.printing.flows.orchestrator import (
     cancel_selected_queue_item as cancel_selected_queue_item_flow,
 )
@@ -61,7 +67,7 @@ from album_printer.printing.flows.queue_management import (
 from album_printer.printing.flows.queue_management import (
     resume_print_queue as resume_print_queue_flow,
 )
-from album_printer.printing_helpers import parse_ipp_job_id
+from album_printer.printing_helpers import parse_ipp_job_id, query_cups_job_state
 from album_printer.ui.print_queue_presenter import (
     refresh_print_queue_table as refresh_print_queue_table_presenter,
 )
@@ -141,10 +147,23 @@ def clear_finished_queue_items(window: Any) -> None:
     )
 
 
+def poll_cups_job_statuses(window: Any) -> None:
+    poll_cups_job_statuses_flow(
+        window,
+        query_cups_job_state_fn=query_cups_job_state,
+    )
+
+
+def start_cups_job_poll_if_needed(window: Any) -> None:
+    start_cups_job_poll_if_needed_flow(window)
+
+
 __all__ = [
     "cancel_selected_queue_item",
     "clear_finished_queue_items",
     "current_ipp_target_name",
+    "poll_cups_job_statuses",
+    "start_cups_job_poll_if_needed",
     "current_queue_target",
     "enqueue_print_paths",
     "pause_print_queue",

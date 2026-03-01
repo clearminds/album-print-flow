@@ -65,6 +65,7 @@ def process_print_queue(window: Any) -> None:
     finally:
         window.print_queue_processing = False
         window.refresh_print_queue_table()
+        window.start_cups_job_poll_if_needed()
 
         has_pending = any(
             str(item.get("status", "")) == "Pending"

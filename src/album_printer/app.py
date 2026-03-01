@@ -207,6 +207,9 @@ from album_printer.printing.main_window_queue_entrypoints import (
     pause_print_queue as pause_print_queue_entrypoint,
 )
 from album_printer.printing.main_window_queue_entrypoints import (
+    poll_cups_job_statuses as poll_cups_job_statuses_entrypoint,
+)
+from album_printer.printing.main_window_queue_entrypoints import (
     process_print_queue as process_print_queue_entrypoint,
 )
 from album_printer.printing.main_window_queue_entrypoints import (
@@ -217,6 +220,9 @@ from album_printer.printing.main_window_queue_entrypoints import (
 )
 from album_printer.printing.main_window_queue_entrypoints import (
     resume_print_queue as resume_print_queue_entrypoint,
+)
+from album_printer.printing.main_window_queue_entrypoints import (
+    start_cups_job_poll_if_needed as start_cups_job_poll_if_needed_entrypoint,
 )
 from album_printer.processing_settings import ProcessingSettings
 from album_printer.settings_store import (
@@ -372,6 +378,9 @@ from album_printer.ui.main_window_image_entrypoints import (
     fill_thumbnail_workers as fill_thumbnail_workers_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
+    fix_needed_message_for_path as fix_needed_message_for_path_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
     image_list_label as image_list_label_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
@@ -408,6 +417,12 @@ from album_printer.ui.main_window_image_entrypoints import (
     on_thumbnail_ready as on_thumbnail_ready_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
+    path_needs_date_check as path_needs_date_check_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    path_needs_fix as path_needs_fix_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
     pick_datetime_override as pick_datetime_override_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
@@ -441,34 +456,16 @@ from album_printer.ui.main_window_image_entrypoints import (
     select_next_aspect_mismatch as select_next_aspect_mismatch_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
+    select_next_fix as select_next_fix_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
     select_previous as select_previous_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    path_needs_date_check as path_needs_date_check_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    path_needs_fix as path_needs_fix_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    fix_needed_message_for_path as fix_needed_message_for_path_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     select_previous_aspect_mismatch as select_previous_aspect_mismatch_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
-    select_previous_date_check as select_previous_date_check_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
     select_previous_fix as select_previous_fix_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    select_next_fix as select_next_fix_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    select_next_date_check as select_next_date_check_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    select_date_check_mismatch as select_date_check_mismatch_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     set_datetime_override_for_path as set_datetime_override_for_path_entrypoint,
@@ -495,16 +492,16 @@ from album_printer.ui.main_window_image_entrypoints import (
     update_aspect_navigation_buttons as update_aspect_navigation_buttons_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
-    update_date_check_navigation_buttons as update_date_check_navigation_buttons_entrypoint,
+    update_crop_orientation_button_text as update_crop_orientation_text_entrypoint,
+)
+from album_printer.ui.main_window_image_entrypoints import (
+    update_date_check_navigation_buttons as update_datecheck_nav_btns,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     update_fix_navigation_buttons as update_fix_navigation_buttons_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     update_fix_needed_message as update_fix_needed_message_entrypoint,
-)
-from album_printer.ui.main_window_image_entrypoints import (
-    update_crop_orientation_button_text as update_crop_orientation_text_entrypoint,
 )
 from album_printer.ui.main_window_image_entrypoints import (
     update_preview_overlay_rect as update_preview_overlay_rect_entrypoint,
@@ -577,6 +574,9 @@ from album_printer.ui.main_window_misc_entrypoints import (
 )
 from album_printer.ui.main_window_misc_entrypoints import (
     default_metadata as default_metadata_entrypoint,
+)
+from album_printer.ui.main_window_misc_entrypoints import (
+    invalidate_table_cache_for_path as invalidate_table_cache_for_path_entrypoint,
 )
 from album_printer.ui.main_window_misc_entrypoints import (
     load_app_print_settings as load_app_print_settings_entrypoint,
@@ -1302,6 +1302,12 @@ class MainWindow(QMainWindow):
     def clear_finished_queue_items(self) -> None:
         clear_finished_queue_items_entrypoint(self)
 
+    def poll_cups_job_statuses(self) -> None:
+        poll_cups_job_statuses_entrypoint(self)
+
+    def start_cups_job_poll_if_needed(self) -> None:
+        start_cups_job_poll_if_needed_entrypoint(self)
+
     def append_log(self, level: str, message: str) -> None:
         append_log_entrypoint(self, level, message)
 
@@ -1420,7 +1426,7 @@ class MainWindow(QMainWindow):
         update_aspect_navigation_buttons_entrypoint(self)
 
     def update_date_check_navigation_buttons(self) -> None:
-        update_date_check_navigation_buttons_entrypoint(self)
+        update_datecheck_nav_btns(self)
 
     def update_fix_navigation_buttons(self) -> None:
         update_fix_navigation_buttons_entrypoint(self)
@@ -1433,6 +1439,9 @@ class MainWindow(QMainWindow):
 
     def cached_table_values_for_path(self, path: Path) -> tuple[str, str, str] | None:
         return cached_table_values_for_path_entrypoint(self, path)
+
+    def invalidate_table_cache_for_path(self, path: Path) -> None:
+        invalidate_table_cache_for_path_entrypoint(self, path)
 
     def store_table_values_for_path(
         self,

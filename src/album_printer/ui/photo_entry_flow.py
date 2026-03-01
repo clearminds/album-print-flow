@@ -35,6 +35,8 @@ def cached_table_values_for_path(
     aspect_text = str(cache_raw.get("aspect_text", "")).strip()
     if not date_text or not location_text or not aspect_text:
         return None
+    if location_text == "Pending":
+        return None
     return date_text, location_text, aspect_text
 
 
@@ -72,8 +74,15 @@ def store_table_values_for_path(
     return True
 
 
+def invalidate_table_cache_for_path(window: Any, path: Path) -> None:
+    entry = window.photo_entry_for_path(path)
+    if isinstance(entry.get("table_cache"), dict):
+        del entry["table_cache"]
+
+
 __all__ = [
     "cached_table_values_for_path",
+    "invalidate_table_cache_for_path",
     "photo_entry_for_path",
     "store_table_values_for_path",
 ]
