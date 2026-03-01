@@ -53,3 +53,45 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "UP", "B"]
 ignore = ["E203"]
+
+# ── Briefcase packaging ──────────────────────────────────────────────
+
+[tool.briefcase]
+project_name = "Album Print Flow"
+bundle = "se.clearminds"
+version = "1.0.0"
+url = "https://github.com/clearminds/album-print-flow"
+license.file = "LICENSE"
+author = "Clearminds"
+author_email = "info@clearminds.se"
+
+[tool.briefcase.app.album-print-flow]
+formal_name = "Album Print Flow"
+description = "Crop, stamp and print photo albums"
+icon = "assets/icons/png/app-icon"
+sources = ["src/album_printer"]
+requires = [
+    "Pillow>=11.0.0",
+    "PySide6>=6.8.0",
+    "pyipp>=0.17.2",
+    "google-auth>=2.40.0",
+    "google-auth-oauthlib>=1.2.2",
+    "keyring>=25.6.0",
+    "pillow-heif>=0.18.0",
+    "rawpy>=0.25.1",
+    "requests>=2.32.5",
+]
+
+[tool.briefcase.app.album-print-flow.macOS]
+requires = []
+
+[tool.briefcase.app.album-print-flow.linux]
+requires = []
+
+[tool.briefcase.app.album-print-flow.linux.flatpak]
+flatpak_runtime = "org.kde.Platform"
+flatpak_runtime_version = "6.7"
+flatpak_sdk = "org.kde.Sdk"
+
+[tool.briefcase.app.album-print-flow.windows]
+requires = []
