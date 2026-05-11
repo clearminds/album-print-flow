@@ -12,11 +12,21 @@ def location_for_path(
     *,
     exif_location_for_image_fn: Callable[[Path], tuple[float, float] | None],
 ) -> tuple[float, float] | None:
+    photo_entry = window.photo_entry_for_path(path)
+    manual_location = photo_entry.get("manual_location")
+    if isinstance(manual_location, dict):
+        try:
+            latitude = float(manual_location.get("latitude"))
+            longitude = float(manual_location.get("longitude"))
+            if -90.0 <= latitude <= 90.0 and -180.0 <= longitude <= 180.0:
+                return latitude, longitude
+        except (TypeError, ValueError):
+            pass
+
     asset = window.source_assets_by_path.get(path)
     if asset is not None and asset.latitude is not None and asset.longitude is not None:
         return asset.latitude, asset.longitude
 
-    photo_entry = window.photo_entry_for_path(path)
     source_location = photo_entry.get("source_location")
     if isinstance(source_location, dict):
         try:
@@ -97,6 +107,11 @@ def format_location(
 ) -> str:
     if location is None:
         return ""
+
+    area_text = window.location_area_text_for_location(location)
+    if area_text:
+        return area_text
+
     selected_format = (format_value or window.location_format_value).strip()
     latitude, longitude = location
     if selected_format == "Lat/Lon":

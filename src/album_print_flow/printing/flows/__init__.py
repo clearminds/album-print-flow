@@ -1,5 +1,6 @@
 from album_print_flow.printing.flows.cups import print_all_via_cups
 from album_print_flow.printing.flows.dispatch import execute_print_paths
+from album_print_flow.printing.flows.export_jpg import export_all_as_jpg
 from album_print_flow.printing.flows.ipp import print_all_via_ipp
 from album_print_flow.printing.flows.orchestrator import (
     cancel_selected_queue_item,
@@ -20,6 +21,7 @@ __all__ = [
     "cancel_selected_queue_item",
     "build_printing_startup_preload_tasks",
     "execute_print_paths",
+    "export_all_as_jpg",
     "get_cups_capabilities",
     "is_cups_available",
     "populate_printers_combo",

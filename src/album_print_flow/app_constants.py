@@ -84,7 +84,7 @@ STAMP_OFFSET_MAX_PX = 240
 
 SETTINGS_ORG = "album-print-flow"
 SETTINGS_APP = "AlbumPrintFlow"
-PRINT_BACKENDS = ["Auto", "CUPS", "Qt", "IPP"]
+PRINT_BACKENDS = ["Auto", "CUPS", "Qt", "IPP", "Export JPG"]
 
 NOMINATIM_DEFAULT_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
 NOMINATIM_DEFAULT_RATE_LIMIT_SECONDS = 1.0

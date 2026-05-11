@@ -104,8 +104,17 @@ def open_cache_manager_dialog(
     open_metadata_manager_dialog_fn(window)
 
 
+def open_location_areas_dialog(
+    window: Any,
+    *,
+    open_location_areas_dialog_ui_fn: Callable[[Any], None],
+) -> None:
+    open_location_areas_dialog_ui_fn(window)
+
+
 __all__ = [
     "open_cache_manager_dialog",
+    "open_location_areas_dialog",
     "open_print_settings_dialog",
     "open_project_settings_dialog",
     "open_settings_dialog",

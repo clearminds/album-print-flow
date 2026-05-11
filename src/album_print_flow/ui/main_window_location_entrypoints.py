@@ -55,6 +55,13 @@ from album_print_flow.ui.nominatim_settings_flow import (
 from album_print_flow.ui.nominatim_settings_flow import (
     reverse_geocode_nominatim as reverse_geocode_nominatim_flow,
 )
+from album_print_flow.ui.location_area_flow import (
+    location_area_text_for_location as location_area_text_for_location_flow,
+    location_area_text_for_path as location_area_text_for_path_flow,
+    location_areas_for_window as location_areas_for_window_flow,
+    normalize_location_areas as normalize_location_areas_flow,
+    store_location_areas as store_location_areas_flow,
+)
 from album_print_flow.ui.nominatim_settings_flow import (
     save_nominatim_cache as save_nominatim_cache_flow,
 )
@@ -169,6 +176,33 @@ def reverse_geocode_nominatim(
     )
 
 
+def location_areas_for_window(window: Any) -> list[dict[str, object]]:
+    return location_areas_for_window_flow(window)
+
+
+def normalize_location_areas(
+    window: Any, raw: object
+) -> list[dict[str, object]]:
+    return normalize_location_areas_flow(raw)
+
+
+def store_location_areas(
+    window: Any, areas: list[dict[str, object]]
+) -> list[dict[str, object]]:
+    return store_location_areas_flow(window, areas)
+
+
+def location_area_text_for_location(
+    window: Any,
+    location: tuple[float, float] | None,
+) -> str | None:
+    return location_area_text_for_location_flow(window, location)
+
+
+def location_area_text_for_path(window: Any, path: Path) -> str | None:
+    return location_area_text_for_path_flow(window, path)
+
+
 __all__ = [
     "format_nominatim_geocodejson",
     "load_custom_location_text_history",
@@ -181,6 +215,11 @@ __all__ = [
     "nominatim_user_agent",
     "register_custom_location_text",
     "reverse_geocode_nominatim",
+    "location_area_text_for_location",
+    "location_area_text_for_path",
+    "location_areas_for_window",
+    "normalize_location_areas",
+    "store_location_areas",
     "save_custom_location_text_history",
     "save_nominatim_cache",
     "save_nominatim_settings",

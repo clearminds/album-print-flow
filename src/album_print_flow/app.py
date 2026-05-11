@@ -129,6 +129,9 @@ from album_print_flow.printing.main_window_print_entrypoints import (
     execute_print_paths as execute_print_paths_entrypoint,
 )
 from album_print_flow.printing.main_window_print_entrypoints import (
+    export_all_as_jpg as export_all_as_jpg_entrypoint,
+)
+from album_print_flow.printing.main_window_print_entrypoints import (
     get_cups_capabilities as get_cups_capabilities_entrypoint,
 )
 from album_print_flow.printing.main_window_print_entrypoints import (
@@ -266,6 +269,9 @@ from album_print_flow.ui.dialogs.print_settings import (
 )
 from album_print_flow.ui.dialogs.project_settings import (
     open_project_settings_dialog as open_project_settings_dialog_ui,
+)
+from album_print_flow.ui.dialogs.location_areas import (
+    open_location_areas_dialog as open_location_areas_dialog_ui,
 )
 from album_print_flow.ui.dialogs.settings import (
     open_settings_dialog as open_settings_dialog_ui,
@@ -513,6 +519,15 @@ from album_print_flow.ui.main_window_location_entrypoints import (
     format_nominatim_geocodejson as format_nominatim_geocodejson_entrypoint,
 )
 from album_print_flow.ui.main_window_location_entrypoints import (
+    location_area_text_for_location as location_area_text_for_location_entrypoint,
+)
+from album_print_flow.ui.main_window_location_entrypoints import (
+    location_area_text_for_path as location_area_text_for_path_entrypoint,
+)
+from album_print_flow.ui.main_window_location_entrypoints import (
+    location_areas_for_window as location_areas_for_window_entrypoint,
+)
+from album_print_flow.ui.main_window_location_entrypoints import (
     load_custom_location_text_history as load_custom_location_text_history_entrypoint,
 )
 from album_print_flow.ui.main_window_location_entrypoints import (
@@ -537,6 +552,9 @@ from album_print_flow.ui.main_window_location_entrypoints import (
     nominatim_user_agent as nominatim_user_agent_entrypoint,
 )
 from album_print_flow.ui.main_window_location_entrypoints import (
+    normalize_location_areas as normalize_location_areas_entrypoint,
+)
+from album_print_flow.ui.main_window_location_entrypoints import (
     register_custom_location_text as register_custom_location_text_entrypoint,
 )
 from album_print_flow.ui.main_window_location_entrypoints import (
@@ -550,6 +568,24 @@ from album_print_flow.ui.main_window_location_entrypoints import (
 )
 from album_print_flow.ui.main_window_location_entrypoints import (
     save_nominatim_settings as save_nominatim_settings_entrypoint,
+)
+from album_print_flow.ui.main_window_location_entrypoints import (
+    store_location_areas as store_location_areas_entrypoint,
+)
+from album_print_flow.ui.location_area_panel import (
+    focus_location_areas_panel_for_path as focus_location_areas_panel_for_path_flow,
+)
+from album_print_flow.ui.location_area_panel import (
+    refresh_location_areas_panel as refresh_location_areas_panel_flow,
+)
+from album_print_flow.ui.location_area_panel import (
+    select_location_area as select_location_area_flow,
+)
+from album_print_flow.ui.location_area_panel import (
+    select_image_by_entry_id as select_image_by_entry_id_flow,
+)
+from album_print_flow.ui.location_area_panel import (
+    set_manual_location_for_selected as set_manual_location_for_selected_flow,
 )
 from album_print_flow.ui.main_window_misc_entrypoints import (
     borderless_enabled as borderless_enabled_entrypoint,
@@ -609,6 +645,9 @@ from album_print_flow.ui.main_window_misc_entrypoints import (
     open_project_settings_dialog as open_project_settings_dialog_entrypoint,
 )
 from album_print_flow.ui.main_window_misc_entrypoints import (
+    open_location_areas_dialog as open_location_areas_dialog_entrypoint,
+)
+from album_print_flow.ui.main_window_misc_entrypoints import (
     open_settings_dialog as open_settings_dialog_entrypoint,
 )
 from album_print_flow.ui.main_window_misc_entrypoints import (
@@ -649,6 +688,9 @@ from album_print_flow.ui.main_window_misc_entrypoints import (
 )
 from album_print_flow.ui.main_window_misc_entrypoints import (
     show_source_guide_dialog as show_source_guide_dialog_entrypoint,
+)
+from album_print_flow.ui.main_window_misc_entrypoints import (
+    scan_portrait_crop_candidates as scan_portrait_crop_candidates_entrypoint,
 )
 from album_print_flow.ui.main_window_misc_entrypoints import (
     show_startup_bookmark_updates_prompt as show_bookmark_updates_prompt_entrypoint,
@@ -1056,6 +1098,12 @@ class MainWindow(QMainWindow):
     def open_settings_dialog(self) -> None:
         open_settings_dialog_entrypoint(self, **OPEN_SETTINGS_DIALOG_FLOW_KWARGS)
 
+    def open_location_areas_dialog(self) -> None:
+        open_location_areas_dialog_entrypoint(
+            self,
+            open_location_areas_dialog_ui_fn=open_location_areas_dialog_ui,
+        )
+
     def setup_menu(self) -> None:
         setup_menu_entrypoint(
             self,
@@ -1078,6 +1126,9 @@ class MainWindow(QMainWindow):
             self,
             open_source_guide_dialog_fn=open_source_guide_dialog,
         )
+
+    def scan_portrait_crop_candidates(self) -> None:
+        scan_portrait_crop_candidates_entrypoint(self)
 
     def default_metadata(self) -> dict[str, object]:
         return default_metadata_entrypoint(self)
@@ -1102,6 +1153,42 @@ class MainWindow(QMainWindow):
 
     def location_for_path(self, path: Path) -> tuple[float, float] | None:
         return location_for_path_entrypoint(self, path)
+
+    def location_areas_for_window(self) -> list[dict[str, object]]:
+        return location_areas_for_window_entrypoint(self)
+
+    def normalize_location_areas(self, raw: object) -> list[dict[str, object]]:
+        return normalize_location_areas_entrypoint(self, raw)
+
+    def store_location_areas(
+        self, areas: list[dict[str, object]]
+    ) -> list[dict[str, object]]:
+        return store_location_areas_entrypoint(self, areas)
+
+    def location_area_text_for_location(
+        self, location: tuple[float, float] | None
+    ) -> str | None:
+        return location_area_text_for_location_entrypoint(self, location)
+
+    def location_area_text_for_path(self, path: Path) -> str | None:
+        return location_area_text_for_path_entrypoint(self, path)
+
+    def refresh_location_areas_panel(self) -> None:
+        refresh_location_areas_panel_flow(self)
+
+    def focus_location_areas_panel_for_path(self, path: Path | None) -> None:
+        focus_location_areas_panel_for_path_flow(self, path)
+
+    def select_location_area(self, area_id: str) -> None:
+        select_location_area_flow(self, area_id)
+
+    def select_image_by_entry_id(self, entry_id: str) -> None:
+        select_image_by_entry_id_flow(self, entry_id)
+
+    def set_manual_location_for_selected(
+        self, latitude: float, longitude: float
+    ) -> None:
+        set_manual_location_for_selected_flow(self, latitude, longitude)
 
     def location_lookup_cache_for_path(self, path: Path) -> dict[str, str]:
         return location_lookup_cache_for_path_entrypoint(self, path)
@@ -1856,6 +1943,27 @@ class MainWindow(QMainWindow):
             ipp_uri,
             print_all_via_ipp_flow=print_all_via_ipp_flow,
             print_all_via_ipp_flow_kwargs=PRINT_ALL_VIA_IPP_FLOW_KWARGS,
+        )
+
+    def export_all_as_jpg(
+        self,
+        paths: list[Path],
+        export_root: str,
+        *,
+        settings_by_path: dict[Path, Any] | None = None,
+        date_used_by_path: dict[Path, datetime] | None = None,
+        log_fn: Any | None = None,
+        progress_fn: Any | None = None,
+    ) -> tuple[list[Path], list[str], str, str, dict[str, str]]:
+        return export_all_as_jpg_entrypoint(
+            self,
+            paths,
+            export_root,
+            render_image_fn=render_image,
+            settings_by_path=settings_by_path,
+            date_used_by_path=date_used_by_path,
+            log_fn=log_fn,
+            progress_fn=progress_fn,
         )
 
 

@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from album_print_flow.ui.preview_label import PreviewLabel
+from album_print_flow.ui.location_area_panel import setup_location_areas_panel
 
 
 def initialize_window_shell(
@@ -644,6 +645,8 @@ def setup_main_layout_widgets(
     wrapper = QWidget()
     wrapper.setLayout(root)
     window.setCentralWidget(wrapper)
+
+    setup_location_areas_panel(window)
 
 
 def setup_status_widgets(window: Any) -> None:

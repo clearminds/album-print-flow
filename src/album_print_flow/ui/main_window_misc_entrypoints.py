@@ -60,6 +60,7 @@ from album_print_flow.ui.custom_location_text_flow import (
     refresh_custom_location_text_options as refresh_custom_location_text_options_flow,
 )
 from album_print_flow.ui.dialog_launchers import (
+    open_location_areas_dialog as open_location_areas_dialog_flow,
     open_print_settings_dialog as open_print_settings_dialog_flow,
 )
 from album_print_flow.ui.dialog_launchers import (
@@ -86,6 +87,9 @@ from album_print_flow.ui.footer_progress import (
 from album_print_flow.ui.help_flow import show_about_dialog as show_about_dialog_flow
 from album_print_flow.ui.help_flow import (
     show_source_guide_dialog as show_source_guide_dialog_flow,
+)
+from album_print_flow.ui.crop_scan_flow import (
+    scan_portrait_crop_candidates as scan_portrait_crop_candidates_flow,
 )
 from album_print_flow.ui.location_lookup_flow import (
     location_lookup_cache_for_path as location_lookup_cache_for_path_flow,
@@ -295,6 +299,10 @@ def show_source_guide_dialog(
     )
 
 
+def scan_portrait_crop_candidates(window: Any) -> None:
+    scan_portrait_crop_candidates_flow(window)
+
+
 def default_metadata(window: Any) -> dict[str, object]:
     return default_metadata_flow(window)
 
@@ -491,6 +499,17 @@ def open_print_settings_dialog(window: Any, **kwargs: Any) -> None:
     open_print_settings_dialog_flow(window, **kwargs)
 
 
+def open_location_areas_dialog(
+    window: Any,
+    *,
+    open_location_areas_dialog_ui_fn: Callable[..., Any],
+) -> None:
+    open_location_areas_dialog_flow(
+        window,
+        open_location_areas_dialog_ui_fn=open_location_areas_dialog_ui_fn,
+    )
+
+
 __all__ = [
     "borderless_enabled",
     "cached_table_values_for_path",
@@ -512,6 +531,7 @@ __all__ = [
     "open_print_settings_dialog",
     "open_project_settings_dialog",
     "open_settings_dialog",
+    "open_location_areas_dialog",
     "persist_project_settings",
     "photo_entry_for_path",
     "refresh_custom_location_text_options",
@@ -524,6 +544,7 @@ __all__ = [
     "setup_menu",
     "show_about_dialog",
     "show_source_guide_dialog",
+    "scan_portrait_crop_candidates",
     "show_startup_bookmark_updates_prompt",
     "source_captured_at_for_path",
     "source_photo_id_for_path",

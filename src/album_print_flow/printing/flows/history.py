@@ -39,6 +39,7 @@ def latest_print_status_for_path(window: Any, path: Path) -> str:
     entry = window.photo_entry_for_path(path)
     status_raw = str(entry.get("last_print_status", "")).strip().lower()
     status_map = {
+        "exported": "Exported",
         "printed": "Printed",
         "failed": "Failed",
         "partial": "Partial",
@@ -126,6 +127,7 @@ def update_selected_print_info(window: Any) -> None:
 
     rows: list[tuple[str, str, str, str, str]] = []
     status_map = {
+        "exported": "Exported",
         "printed": "Printed",
         "failed": "Failed",
         "partial": "Partial",
@@ -283,6 +285,8 @@ def record_print_history(
             effective_job_ids[photo_key] = job_id
         event_job_ids[photo_key] = job_id
         status = "printed" if path in printed_set else "failed"
+        if status == "printed" and backend == "Export JPG":
+            status = "exported"
         if status == "printed":
             entry["total_printed"] = int(entry.get("total_printed", 0)) + 1
             entry["last_printed_at"] = timestamp

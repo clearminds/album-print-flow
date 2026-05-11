@@ -60,6 +60,7 @@ def refresh_image_list_labels(
     window.start_thumbnail_generation()
     window.start_table_metadata_resolution()
     window.update_aspect_navigation_buttons()
+    window.refresh_location_areas_panel()
 
 
 def populate_image_table_row(
@@ -170,6 +171,7 @@ def append_image_rows(
 
     window.fill_thumbnail_workers()
     window.enqueue_table_metadata_for_paths(new_paths)
+    window.refresh_location_areas_panel()
 
 
 __all__ = [

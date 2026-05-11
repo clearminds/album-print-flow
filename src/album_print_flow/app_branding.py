@@ -22,9 +22,12 @@ def is_debugger_attached() -> bool:
 
 def app_version() -> str:
     try:
-        return importlib.metadata.version("album-print-flow")
+        version = importlib.metadata.version("album-print-flow")
+        if version:
+            return version
     except importlib.metadata.PackageNotFoundError:
-        return "1.0.0"
+        pass
+    return "1.1.0"
 
 
 def app_runtime_line() -> str:
@@ -63,8 +66,7 @@ def app_about_text(
         f"{info['name']}\n"
         f"{info['version_line']}\n\n"
         f"{info['tagline']}\n\n"
-        f"{info['copyright']}\n"
-        f"{info['runtime']}"
+        f"{info['copyright']}"
     )
 
 

@@ -9,8 +9,11 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFormLayout,
+    QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
@@ -69,6 +72,16 @@ def open_print_settings_dialog(
     printer_combo.addItem("(Loading printers…)")
     printer_combo.setEnabled(False)
     refresh_printers_btn = QPushButton("Refresh Printers", dialog)
+
+    export_folder_edit = QLineEdit(dialog)
+    export_folder_edit.setPlaceholderText("Choose a folder for exported JPGs")
+    export_folder_edit.setText(window.export_root_value)
+    export_browse_btn = QPushButton("Browse...", dialog)
+    export_row = QWidget(dialog)
+    export_row_layout = QHBoxLayout(export_row)
+    export_row_layout.setContentsMargins(0, 0, 0, 0)
+    export_row_layout.addWidget(export_folder_edit)
+    export_row_layout.addWidget(export_browse_btn)
 
     cups_section = build_driver_options_section(
         dialog,
@@ -138,7 +151,12 @@ def open_print_settings_dialog(
     def update_printer_combo_for_backend() -> None:
         nonlocal printers_loaded
         backend = backend_combo.currentText()
-        if backend == "IPP":
+        if backend == "Export JPG":
+            printer_combo.clear()
+            printer_combo.addItem("Export as files")
+            printer_combo.setEnabled(False)
+            refresh_printers_btn.setEnabled(False)
+        elif backend == "IPP":
             printer_combo.clear()
             printer_combo.addItem(ipp_printer_name_value or "(unknown)")
             printer_combo.setEnabled(False)
@@ -163,6 +181,10 @@ def open_print_settings_dialog(
         nonlocal ipp_printer_name_value
         set_fetch_status("Loading printer capabilities…")
         backend = backend_combo.currentText()
+        if backend == "Export JPG":
+            set_cups_placeholder("(Not used for export)")
+            set_fetch_status("Export folder ready")
+            return
         if backend == "Auto" and not window.is_cups_available():
             set_fetch_status("Auto → Qt (CUPS not available)")
             return
@@ -207,6 +229,7 @@ def open_print_settings_dialog(
         show_ipp = effective == "IPP"
         show_paper = effective == "Qt"
         show_cups_options = effective in {"CUPS", "IPP"}
+        show_export = effective == "Export JPG"
 
         def set_row_visible(widget: QWidget, visible: bool) -> None:
             widget.setVisible(visible)
@@ -216,6 +239,7 @@ def open_print_settings_dialog(
 
         set_row_visible(printer_combo, show_printer)
         set_row_visible(refresh_printers_btn, show_printer)
+        set_row_visible(export_row, show_export)
         set_row_visible(paper_combo, show_paper)
         set_row_visible(orientation_combo, show_paper)
         show_printer_prefs = show_paper and sys.platform == "win32"
@@ -286,8 +310,18 @@ def open_print_settings_dialog(
                 f"Failed to open printer preferences: {e}",
             )
 
+    def browse_export_folder() -> None:
+        selected = QFileDialog.getExistingDirectory(
+            dialog,
+            "Select export folder",
+            export_folder_edit.text().strip() or None,
+        )
+        if selected:
+            export_folder_edit.setText(selected)
+
     refresh_printers_btn.clicked.connect(refresh_printers)
     printer_prefs_btn.clicked.connect(open_printer_preferences)
+    export_browse_btn.clicked.connect(browse_export_folder)
     ipp_test_button.clicked.connect(test_ipp_connection)
     calibration_button.clicked.connect(
         lambda: on_calibration_clicked(dialog, backend_combo, printer_combo)
@@ -316,6 +350,7 @@ def open_print_settings_dialog(
     form.addRow(section_label("Destination"), QLabel("", dialog))
     form.addRow("Printer", printer_combo)
     form.addRow("", refresh_printers_btn)
+    form.addRow("Export Folder", export_row)
     form.addRow("Paper", paper_combo)
     form.addRow("Orientation", orientation_combo)
     form.addRow("", printer_prefs_btn)
@@ -362,7 +397,11 @@ def open_print_settings_dialog(
     window.print_backend_value = backend_combo.currentText()
     window.ipp_uri_value = ipp_uri_edit.text().strip()
     window.ipp_wait_for_completion_value = bool(ipp_send_mode_combo.currentData())
-    window.printer_value = printer_combo.currentText().strip()
+    window.export_root_value = export_folder_edit.text().strip()
+    if window.print_backend_value == "Export JPG":
+        window.printer_value = "Export as files"
+    else:
+        window.printer_value = printer_combo.currentText().strip()
     paper_value = paper_combo.currentData()
     if isinstance(paper_value, str):
         window.paper_value = paper_value

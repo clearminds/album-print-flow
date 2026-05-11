@@ -34,7 +34,7 @@ def enqueue_print_paths(window: Any, paths: list[object]) -> None:
     if not paths:
         return
     queue_paths_batches = [list(paths)]
-    if len(paths) > 1:
+    if len(paths) > 1 and window.print_backend_value != "Export JPG":
         queue_paths_batches = [[path] for path in paths]
 
     queue_ids: list[int] = []

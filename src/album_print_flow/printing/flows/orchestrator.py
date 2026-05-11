@@ -10,6 +10,9 @@ from album_print_flow.printing.flows.cups import (
 from album_print_flow.printing.flows.dispatch import (
     execute_print_paths as execute_print_paths_flow,
 )
+from album_print_flow.printing.flows.export_jpg import (
+    export_all_as_jpg as export_all_as_jpg_flow,
+)
 from album_print_flow.printing.flows.ipp import (
     print_all_via_ipp as print_all_via_ipp_flow,
 )
@@ -101,6 +104,29 @@ def print_all_via_ipp(
     )
 
 
+def export_all_as_jpg(
+    window: Any,
+    paths: list[Path],
+    export_root: str,
+    render_image_fn: Callable[..., Any],
+    *,
+    settings_by_path: dict[Path, Any] | None = None,
+    date_used_by_path: dict[Path, datetime] | None = None,
+    log_fn: Any | None = None,
+    progress_fn: Any | None = None,
+) -> tuple[list[Path], list[str], str, str, dict[str, str]]:
+    return export_all_as_jpg_flow(
+        window,
+        paths,
+        export_root,
+        render_image_fn,
+        settings_by_path=settings_by_path,
+        date_used_by_path=date_used_by_path,
+        log_fn=log_fn,
+        progress_fn=progress_fn,
+    )
+
+
 def execute_print_paths(
     window: Any,
     paths: list[Path],
@@ -111,6 +137,7 @@ def execute_print_paths(
 __all__ = [
     "cancel_selected_queue_item",
     "execute_print_paths",
+    "export_all_as_jpg",
     "print_all_via_cups",
     "print_all_via_ipp",
     "print_all_via_qt",

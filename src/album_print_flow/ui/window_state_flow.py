@@ -89,6 +89,22 @@ def restore_ui_state(
                 "ui/bottom_splitter_sizes", fallback_bottom_sizes
             )
 
+    raw_location_panel_sizes = window.ui_settings.value(
+        "ui/location_panel_splitter_sizes"
+    )
+    if hasattr(window, "location_panel_splitter"):
+        location_panel_sizes: list[int] = []
+        if isinstance(raw_location_panel_sizes, list):
+            for value in raw_location_panel_sizes:
+                try:
+                    parsed = int(value)
+                except (TypeError, ValueError):
+                    continue
+                if parsed > 0:
+                    location_panel_sizes.append(parsed)
+        if len(location_panel_sizes) == 2:
+            window.location_panel_splitter.setSizes(location_panel_sizes)
+
 
 def save_ui_state(window: Any) -> None:
     window.ui_settings.setValue("ui/geometry", window.saveGeometry())
@@ -106,6 +122,11 @@ def save_ui_state(window: Any) -> None:
     window.ui_settings.setValue(
         "ui/bottom_splitter_sizes", window.bottom_splitter.sizes()
     )
+    if hasattr(window, "location_panel_splitter"):
+        window.ui_settings.setValue(
+            "ui/location_panel_splitter_sizes",
+            window.location_panel_splitter.sizes(),
+        )
     window.ui_settings.sync()
 
 

@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from PIL import Image, ImageEnhance
+
+from album_print_flow.app_primitives import crop_geometry_for_ratio
 from PIL.ImageQt import ImageQt
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
@@ -93,6 +95,41 @@ def processing_settings_for_path(
     rotation_degrees = normalize_rotation_degrees_fn(
         image_settings.get("rotation_degrees", 0)
     )
+    stored_settings = window.folder_metadata.get("image_settings", {})
+    entry = None
+    if isinstance(stored_settings, dict):
+        entry = stored_settings.get(window.metadata_key_for_path(path))
+        if not isinstance(entry, dict):
+            entry = stored_settings.get(path.name)
+            if not isinstance(entry, dict):
+                entry = None
+
+    has_explicit_orientation = (
+        isinstance(entry, dict)
+        and str(entry.get("orientation", "")) in {"Landscape", "Portrait"}
+    )
+
+    if not has_explicit_orientation:
+        width, height = window.image_dimensions_for_path(path)
+        if rotation_degrees in {90, 270}:
+            width, height = height, width
+
+        def crop_area(orientation_value: str) -> int:
+            _left, _top, crop_w, crop_h = crop_geometry_for_ratio(
+                width,
+                height,
+                orientation_value,
+                window.crop_ratio_value,
+                int(image_settings.get("crop_zoom_percent", 100)),
+                int(image_settings.get("crop_offset_x_percent", 0)),
+                int(image_settings.get("crop_offset_y_percent", 0)),
+            )
+            return max(1, int(crop_w)) * max(1, int(crop_h))
+
+        # Choose the orientation that yields the larger crop area.
+        if crop_area("Portrait") > crop_area("Landscape"):
+            orientation = "Portrait"
+
     stamp_mode = window.stamp_mode_value
     clock_mode = window.clock_mode_value
     if orientation == "Portrait":
@@ -315,6 +352,7 @@ def on_image_changed(window: Any, row: int) -> None:
         return
     window.restore_image_settings_for_selected()
     window.refresh_preview()
+    window.focus_location_areas_panel_for_path(window.selected_path())
 
 
 def on_image_table_selection_changed(window: Any, current_row: int) -> None:

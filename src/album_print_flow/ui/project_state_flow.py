@@ -219,6 +219,11 @@ def load_app_print_settings(
         window.ipp_wait_for_completion_value,
     )
 
+    export_root = str(
+        window.ui_settings.value("print/export_root", window.export_root_value)
+    )
+    window.export_root_value = export_root.strip()
+
     window.printer_value = str(
         window.ui_settings.value("print/printer", window.printer_value)
     ).strip()
@@ -293,6 +298,7 @@ def save_app_print_settings(window: Any) -> None:
     window.ui_settings.setValue(
         "print/ipp_wait_for_completion", window.ipp_wait_for_completion_value
     )
+    window.ui_settings.setValue("print/export_root", window.export_root_value)
     window.ui_settings.setValue("print/printer", window.printer_value)
     window.ui_settings.setValue("print/cups_media", window.cups_media_value)
     window.ui_settings.setValue("print/cups_media_type", window.cups_media_type_value)
@@ -327,6 +333,8 @@ def default_metadata(_window: Any) -> dict[str, object]:
         "image_settings": {},
         "photos": {},
         "print_events": [],
+        "location_areas": [],
+        "recent_pins": [],
     }
 
 

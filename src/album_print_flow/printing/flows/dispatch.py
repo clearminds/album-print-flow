@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtPrintSupport import QPrinterInfo
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from album_print_flow.ipp_backend import IppBackendError, get_ipp_capabilities
 
@@ -102,6 +102,95 @@ def execute_print_paths(
             paths, window.ipp_uri_value
         )
         target_name = window.current_ipp_target_name()
+    elif backend == "Export JPG":
+        exported_names = [
+            path.name
+            for path in paths
+            if window.latest_print_status_for_path(path) == "Exported"
+        ]
+        if exported_names:
+            examples = "\n".join(f"- {name}" for name in exported_names[:5])
+            message = (
+                f"{len(exported_names)} selected photo(s) were already exported.\n\n"
+                "Examples:\n"
+                f"{examples}\n\n"
+                "Export all selected, or only new?"
+            )
+            reply = QMessageBox.question(
+                window,
+                "Already exported photos",
+                message,
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.Cancel:
+                window.append_log("INFO", "Export cancelled by user")
+                return (
+                    [],
+                    [path.name for path in paths],
+                    "Export cancelled by user",
+                    "",
+                    backend,
+                    {},
+                )
+            if reply == QMessageBox.StandardButton.No:
+                paths = [
+                    path
+                    for path in paths
+                    if window.latest_print_status_for_path(path) != "Exported"
+                ]
+                if not paths:
+                    QMessageBox.information(
+                        window,
+                        "Export JPG",
+                        "No new images to export.",
+                    )
+                    return (
+                        [],
+                        [],
+                        "No new images to export",
+                        "",
+                        backend,
+                        {},
+                    )
+        export_root = window.export_root_value
+        if not export_root:
+            export_root = QFileDialog.getExistingDirectory(
+                window,
+                "Select export folder",
+                window.current_folder.as_posix()
+                if window.current_folder is not None
+                else "",
+            )
+            if not export_root:
+                window.append_log("INFO", "Export cancelled by user")
+                return (
+                    [],
+                    [path.name for path in paths],
+                    "Export cancelled by user",
+                    "",
+                    backend,
+                    {},
+                )
+            window.export_root_value = export_root
+            window.save_app_print_settings()
+
+        def on_export_progress(current: int, total: int, name: str) -> None:
+            window.update_footer_progress("Exporting", current, total)
+            window.statusBar().showMessage(f"Exporting {current}/{total}: {name}")
+
+        try:
+            printed, failed, error, export_dir, job_ids = window.export_all_as_jpg(
+                paths,
+                export_root,
+                log_fn=window.append_log,
+                progress_fn=on_export_progress,
+            )
+        finally:
+            window.clear_footer_progress()
+        target_name = export_dir or "Export"
     else:
         if backend == "CUPS":
             if not printer_name:
@@ -203,7 +292,10 @@ def execute_print_paths(
     window.update_selected_print_info()
 
     queue_only_backend = backend in {"CUPS", "IPP"}
-    action_word = "Queued" if queue_only_backend else "Sent"
+    if backend == "Export JPG":
+        action_word = "Exported"
+    else:
+        action_word = "Queued" if queue_only_backend else "Sent"
     message = f"{action_word} {len(printed)} image(s) to {target_name}."
     if error:
         message += f" Error: {error}"
@@ -211,11 +303,17 @@ def execute_print_paths(
         message += f" Failed: {', '.join(failed[:5])}"
 
     log_level = "ERROR" if error else ("WARNING" if failed else "INFO")
-    count_label = "queued" if queue_only_backend else "printed"
-    summary = (
-        f"Print queued via {backend} to {target_name}: "
-        f"{count_label}={len(printed)}, failed={len(failed)}"
-    )
+    if backend == "Export JPG":
+        summary = (
+            f"Exported via {backend} to {target_name}: "
+            f"exported={len(printed)}, failed={len(failed)}"
+        )
+    else:
+        count_label = "queued" if queue_only_backend else "printed"
+        summary = (
+            f"Print queued via {backend} to {target_name}: "
+            f"{count_label}={len(printed)}, failed={len(failed)}"
+        )
     window.append_log(
         log_level,
         summary,

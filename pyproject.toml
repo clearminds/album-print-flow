@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "album-print-flow"
-version = "1.0.0"
+version = "1.1.0"
 description = "Linux-first photo crop/stamp/print tool"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -59,7 +59,7 @@ ignore = ["E203"]
 [tool.briefcase]
 project_name = "Album Print Flow"
 bundle = "se.clearminds"
-version = "1.0.0"
+version = "1.1.0"
 url = "https://github.com/clearminds/album-print-flow"
 license.file = "LICENSE"
 author = "Clearminds"

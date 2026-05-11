@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def detect_orientation_for_path(window: Any, path: Path) -> str:
@@ -45,7 +45,8 @@ def image_settings_for_path(
             values = {}
 
     orientation = values.get("orientation")
-    if orientation not in {"Landscape", "Portrait"}:
+    has_explicit_orientation = orientation in {"Landscape", "Portrait"}
+    if not has_explicit_orientation:
         cached_orientation = window.orientation_cache.get(path)
         if cached_orientation in {"Landscape", "Portrait"}:
             orientation = cached_orientation
@@ -78,6 +79,8 @@ def image_settings_for_path(
     crop_offset_y_percent = max(-100, min(100, crop_offset_y_percent))
 
     rotation_degrees = normalize_rotation_degrees_fn(values.get("rotation_degrees", 0))
+    if not has_explicit_orientation and rotation_degrees in {90, 270}:
+        orientation = "Portrait" if orientation == "Landscape" else "Landscape"
 
     location_stamp_mode_override = str(
         values.get("location_stamp_mode_override", "Default")
@@ -199,7 +202,7 @@ def image_dimensions_for_path(
     metadata_path = original_metadata_path_for_image_fn(path)
     try:
         with Image.open(metadata_path) as image:
-            width, height = image.size
+            width, height = ImageOps.exif_transpose(image).size
         result = (max(1, int(width)), max(1, int(height)))
     except OSError:
         try:

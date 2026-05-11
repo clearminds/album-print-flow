@@ -53,6 +53,9 @@ from album_print_flow.printing.flows.setup import (
 from album_print_flow.printing.flows.setup import (
     populate_printers_combo as populate_printers_combo_flow,
 )
+from album_print_flow.printing.flows.orchestrator import (
+    export_all_as_jpg as export_all_as_jpg_flow,
+)
 
 
 def ensure_photo_entry_for_path(window: Any, path: Path) -> dict[str, object]:
@@ -124,6 +127,29 @@ def print_selected(window: Any) -> None:
 
 def print_all(window: Any) -> None:
     print_all_flow(window)
+
+
+def export_all_as_jpg(
+    window: Any,
+    paths: list[Path],
+    export_root: str,
+    *,
+    render_image_fn: Any,
+    settings_by_path: dict[Path, Any] | None = None,
+    date_used_by_path: dict[Path, datetime] | None = None,
+    log_fn: Any | None = None,
+    progress_fn: Any | None = None,
+) -> tuple[list[Path], list[str], str, str, dict[str, str]]:
+    return export_all_as_jpg_flow(
+        window,
+        paths,
+        export_root,
+        render_image_fn,
+        settings_by_path=settings_by_path,
+        date_used_by_path=date_used_by_path,
+        log_fn=log_fn,
+        progress_fn=progress_fn,
+    )
 
 
 def print_borderless_calibration_pages(
@@ -242,6 +268,7 @@ __all__ = [
     "clear_failed_logs_for_selected",
     "clear_selected_print_status",
     "execute_print_paths",
+    "export_all_as_jpg",
     "ensure_photo_entry_for_path",
     "get_cups_capabilities",
     "is_already_printed",

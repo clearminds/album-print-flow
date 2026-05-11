@@ -50,6 +50,10 @@ def setup_menu(
     print_action.triggered.connect(window.print_all)
     file_menu.addAction(print_action)
 
+    scan_portrait_action = qaction_cls("Scan Portrait Crops", window)
+    scan_portrait_action.triggered.connect(window.scan_portrait_crop_candidates)
+    file_menu.addAction(scan_portrait_action)
+
     help_menu = window.menuBar().addMenu("Help")
     source_guide_action = qaction_cls("Source Guide", window)
     source_guide_action.triggered.connect(window.show_source_guide_dialog)

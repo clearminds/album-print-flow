@@ -196,6 +196,7 @@ def initialize_main_window_state(
     window.print_backend_value = "Auto"
     window.ipp_uri_value = ""
     window.ipp_wait_for_completion_value = False
+    window.export_root_value = ""
     window.cups_media_value = ""
     window.cups_media_type_value = ""
     window.cups_print_quality_value = ""

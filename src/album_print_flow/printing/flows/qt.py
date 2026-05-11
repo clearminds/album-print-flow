@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+import sys
 from typing import Any
 
 from PIL.ImageQt import ImageQt
 from PySide6.QtCore import QMarginsF, QRect, QSizeF, Qt
 from PySide6.QtGui import QImage, QPageLayout, QPageSize, QPainter, QPixmap, QTransform
-from PySide6.QtPrintSupport import QPrinter
+from PySide6.QtPrintSupport import QPrintDialog, QPrinter
+from PySide6.QtWidgets import QDialog
 
 
 def _page_size_for_qt(paper_value: str, width_mm: float, height_mm: float) -> QPageSize:
@@ -46,6 +48,12 @@ def print_all_via_qt(
 
     printer = QPrinter(QPrinter.PrinterMode.HighResolution)
     printer.setPrinterName(printer_name)
+
+    if sys.platform == "darwin":
+        dialog = QPrintDialog(printer, window)
+        dialog.setWindowTitle("Print")
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return printed_successfully, [path.name for path in paths], "Print cancelled"
 
     borderless = window.borderless_enabled()
     media_size = media_size_mm_from_value_fn(window.cups_media_value)
