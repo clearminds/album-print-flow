@@ -1,0 +1,17 @@
+# Backstage catalog entry (https://backstage.io/docs/features/software-catalog/descriptor-format).
+# The AI workers read this on the default branch: clearminds.se/clearai-profile names the profile that works this repository
+# (an NDA repository only ever uses a local-only profile).
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: album-print-flow
+  title: "Album Print Flow"
+  description: "Album Print Flow"
+  annotations:
+    clearminds.se/clearai-profile: clearminds
+    github.com/project-slug: clearminds/album-print-flow
+spec:
+  type: service
+  lifecycle: production
+  owner: clearminds
